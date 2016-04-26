@@ -8,13 +8,25 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.github.mikephil.charting.charts.BarChart;
+import com.github.mikephil.charting.data.BarData;
+import com.github.mikephil.charting.data.BarDataSet;
+import com.github.mikephil.charting.data.BarEntry;
+import com.github.mikephil.charting.data.ChartData;
+import com.github.mikephil.charting.interfaces.datasets.IBarDataSet;
+import com.github.mikephil.charting.utils.ColorTemplate;
+
+import java.util.ArrayList;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
 public class MainActivity extends AppCompatActivity {
 
-    @BindView(R.id.toolbar) Toolbar toolbar;
+    @BindView(R.id.toolbar) Toolbar mToolbar;
+
+    @BindView(R.id.chart) BarChart mChart;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,7 +35,35 @@ public class MainActivity extends AppCompatActivity {
 
         ButterKnife.bind(this);
 
-        setSupportActionBar(toolbar);
+        setSupportActionBar(mToolbar);
+
+        initChart();
+    }
+
+    private void initChart() {
+        mChart.setDescription("chart description");
+        mChart.setData(generateChartData(1, 200, 12));
+    }
+
+    private BarData generateChartData(int dataSets, float range, int count) {
+        final String[] labels = new String[] { "Company A", "Company B", "Company C", "Company D", "Company E", "Company F" };
+        ArrayList<IBarDataSet> sets = new ArrayList<IBarDataSet>();
+
+        for(int i = 0; i < dataSets; i++) {
+
+            ArrayList<BarEntry> entries = new ArrayList<BarEntry>();
+
+            for(int j = 0; j < count; j++) {
+                entries.add(new BarEntry((float) (Math.random() * range) + range / 4, j));
+            }
+
+            BarDataSet ds = new BarDataSet(entries, labels[i]);
+            ds.setColors(ColorTemplate.VORDIPLOM_COLORS);
+            sets.add(ds);
+        }
+
+        BarData d = new BarData(ChartData.generateXVals(0, count), sets);
+        return d;
     }
 
     @OnClick(R.id.fab)
