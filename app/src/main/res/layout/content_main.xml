@@ -12,8 +12,8 @@
     tools:context="com.adeneche.capstone.MainActivity"
     tools:showIn="@layout/activity_main">
 
-    <TextView
+    <ListView
+        android:id="@+id/expenses_list"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello World!" />
+        android:layout_height="wrap_content" />
 </RelativeLayout>
