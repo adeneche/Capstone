@@ -17,7 +17,16 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="?attr/colorPrimary"
-            app:popupTheme="@style/AppTheme.PopupOverlay" />
+            app:popupTheme="@style/AppTheme.PopupOverlay">
+
+            <android.support.v7.widget.SearchView
+                android:id="@+id/search_expense"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                app:iconifiedByDefault="true"
+                app:queryHint="@string/search_hint" />
+        </android.support.v7.widget.Toolbar>
 
         <com.github.mikephil.charting.charts.BarChart
             android:id="@+id/chart"

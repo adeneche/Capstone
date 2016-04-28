@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -32,10 +33,18 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 
 public class MainActivity extends AppCompatActivity {
+    private static final String TAG = "MainActivity";
 
     @BindView(R.id.toolbar) Toolbar mToolbar;
     @BindView(R.id.chart) BarChart mChart;
     @BindView(R.id.expenses_list) ListView mListExpenses;
+    @BindView(R.id.search_expense) SearchView mSearchView;
+
+    private final Expense[] data = {
+            Expense.to("Amazon Card", 250),
+            Expense.to("Car lease", 155),
+            Expense.to("Rent", 2145)};
+    private ArrayAdapter<Expense> mExpensesAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,16 +57,33 @@ public class MainActivity extends AppCompatActivity {
 
         initChart();
         initListExpenses();
+        initSearchView();
+    }
+
+    private void initSearchView() {
+        mSearchView.setOnQueryTextListener(
+                new SearchView.OnQueryTextListener() {
+                    @Override
+                    public boolean onQueryTextSubmit(String query) {
+                        mSearchView.clearFocus();
+                        return true;
+                    }
+                    @Override
+                    public boolean onQueryTextChange(String query) {
+                        filterExpenses(query);
+                        return true;
+                    }
+                });
+    }
+
+    private void filterExpenses(String query) {
+        mExpensesAdapter.getFilter().filter(query);
     }
 
     private void initListExpenses() {
-        final Expense[] data= {
-                Expense.to("Amazon Card", 250),
-                Expense.to("Car lease", 155),
-                Expense.to("Rent", 2145)};
 
-        ArrayAdapter<Expense> adapter = new ExpenseAdapter(this, R.layout.expenselist_item, data);
-        mListExpenses.setAdapter(adapter);
+        mExpensesAdapter = new ExpenseAdapter(this, R.layout.expenselist_item, data);
+        mListExpenses.setAdapter(mExpensesAdapter);
     }
 
     private void initChart() {
@@ -116,12 +142,10 @@ public class MainActivity extends AppCompatActivity {
 
     static class ExpenseAdapter extends ArrayAdapter<Expense> {
         int layoutResourceId;
-        Expense[] expenses;
 
         public ExpenseAdapter(Context context, int resource, Expense[] data) {
             super(context, resource, data);
             layoutResourceId = resource;
-            expenses = data;
         }
 
         @Override
@@ -139,7 +163,7 @@ public class MainActivity extends AppCompatActivity {
                 holder = (ExpenseHolder) view.getTag();
             }
 
-            final Expense expense = expenses[position];
+            final Expense expense = getItem(position);
 
             holder.description.setText(expense.getDescription());
             holder.amount.setText(expense.getFormattedAmount());

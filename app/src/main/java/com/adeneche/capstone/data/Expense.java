@@ -29,4 +29,9 @@ public class Expense {
     public static Expense to(final String description, final double amount) {
         return new Expense(description, amount);
     }
+
+    @Override
+    public String toString() {
+        return description + " " + amount;
+    }
 }
