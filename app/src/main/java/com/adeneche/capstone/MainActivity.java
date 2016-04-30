@@ -1,6 +1,7 @@
 package com.adeneche.capstone;
 
 import android.app.Activity;
+import android.app.FragmentManager;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -13,6 +14,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -25,6 +27,8 @@ import butterknife.OnClick;
 
 public class MainActivity extends AppCompatActivity {
 //    private static final String TAG = "MainActivity";
+
+    private static final String EXPENSE_DIALOG_TAG="EXPENSE_DIALOG";
 
     @BindView(R.id.toolbar) Toolbar mToolbar;
     @BindView(R.id.expenses_list) ListView mListExpenses;
@@ -73,6 +77,14 @@ public class MainActivity extends AppCompatActivity {
 
         mExpensesAdapter = new ExpenseAdapter(this, R.layout.expenselist_item, data);
         mListExpenses.setAdapter(mExpensesAdapter);
+        mListExpenses.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                FragmentManager fm = getFragmentManager();
+                ExpenseFragment dialog = ExpenseFragment.newInstance("", "");
+                dialog.show(fm, EXPENSE_DIALOG_TAG);
+            }
+        });
     }
 
     @OnClick(R.id.fab)
