@@ -21,6 +21,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.adeneche.capstone.data.Expense;
+import com.akexorcist.roundcornerprogressbar.RoundCornerProgressBar;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -30,10 +31,12 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.O
     private static final String TAG = "MainActivity";
 
     private static final String EXPENSE_DIALOG_TAG="EXPENSE_DIALOG";
+    private static final String SUMMARY_DIALOG_TAG="SUMMARY_DIALOG";
 
     @BindView(R.id.toolbar) Toolbar mToolbar;
     @BindView(R.id.expenses_list) ListView mListExpenses;
     @BindView(R.id.search_expense) SearchView mSearchView;
+    @BindView(R.id.budget_progress) RoundCornerProgressBar mBudgetBar;
 
     private final Expense[] data = {
             Expense.to("Amazon Card", 250),
@@ -86,6 +89,13 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.O
                 dialog.show(fm, EXPENSE_DIALOG_TAG);
             }
         });
+    }
+
+    @OnClick(R.id.budget_progress)
+    public void budgetBarClick() {
+        FragmentManager fm = getFragmentManager();
+        SummaryFragment dialog = SummaryFragment.newInstance("", "");
+        dialog.show(fm, SUMMARY_DIALOG_TAG);
     }
 
     @OnClick(R.id.fab)
