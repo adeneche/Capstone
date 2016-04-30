@@ -9,6 +9,7 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -25,8 +26,8 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-public class MainActivity extends AppCompatActivity {
-//    private static final String TAG = "MainActivity";
+public class MainActivity extends AppCompatActivity implements ExpenseFragment.OnExpenseEditedListener {
+    private static final String TAG = "MainActivity";
 
     private static final String EXPENSE_DIALOG_TAG="EXPENSE_DIALOG";
 
@@ -113,6 +114,11 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onDialogOk(String amount, String description) {
+        Log.i(TAG, "Expense edited");
     }
 
     static class ExpenseAdapter extends ArrayAdapter<Expense> {

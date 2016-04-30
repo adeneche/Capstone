@@ -5,7 +5,6 @@ import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -13,7 +12,7 @@ import android.view.LayoutInflater;
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link ExpenseFragment.OnFragmentInteractionListener} interface
+ * {@link OnExpenseEditedListener} interface
  * to handle interaction events.
  * Use the {@link ExpenseFragment#newInstance} factory method to
  * create an instance of this fragment.
@@ -28,7 +27,7 @@ public class ExpenseFragment extends DialogFragment {
     private String mParam1;
     private String mParam2;
 
-    private OnFragmentInteractionListener mListener;
+    private OnExpenseEditedListener mListener;
 
     public ExpenseFragment() {
         // Required empty public constructor
@@ -82,7 +81,7 @@ public class ExpenseFragment extends DialogFragment {
             .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    // add expense
+                    ((OnExpenseEditedListener) getActivity()).onDialogOk("", "");
                 }
             })
             .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -94,21 +93,14 @@ public class ExpenseFragment extends DialogFragment {
         return builder.create();
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
-    }
-
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
+        if (context instanceof OnExpenseEditedListener) {
+            mListener = (OnExpenseEditedListener) context;
         } else {
             throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
+                    + " must implement OnExpenseEditedListener");
         }
     }
 
@@ -128,8 +120,8 @@ public class ExpenseFragment extends DialogFragment {
      * "http://developer.android.com/training/basics/fragments/communicating.html"
      * >Communicating with Other Fragments</a> for more information.
      */
-    public interface OnFragmentInteractionListener {
+    public interface OnExpenseEditedListener {
         // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
+        void onDialogOk(String amount, String description);
     }
 }
