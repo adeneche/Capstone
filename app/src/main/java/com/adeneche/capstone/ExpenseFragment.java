@@ -8,6 +8,13 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.EditText;
+
+import com.adeneche.capstone.data.Expense;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -20,12 +27,15 @@ import android.view.LayoutInflater;
 public class ExpenseFragment extends DialogFragment {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
+    private static final String ARG_DESCRIPTION = "description";
+    private static final String ARG_AMOUNT = "amount";
 
     // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+    private String mDescription;
+    private double mAmount;
+
+    @BindView(R.id.edit_expense_amount) EditText mAmountTxt;
+    @BindView(R.id.edit_expense_description) EditText mDescriptionText;
 
     private OnExpenseEditedListener mListener;
 
@@ -37,51 +47,62 @@ public class ExpenseFragment extends DialogFragment {
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
      *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
      * @return A new instance of fragment ExpenseFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static ExpenseFragment newInstance(String param1, String param2) {
+    public static ExpenseFragment newInstance(Expense expense) {
         ExpenseFragment fragment = new ExpenseFragment();
         Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
+        args.putString(ARG_DESCRIPTION, expense.getDescription());
+        args.putDouble(ARG_AMOUNT, expense.getAmount());
         fragment.setArguments(args);
         return fragment;
+    }
+
+    public static ExpenseFragment newInstance() {
+        return newInstance(Expense.to("", 0));
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
+            mDescription = getArguments().getString(ARG_DESCRIPTION);
+            mAmount = getArguments().getDouble(ARG_AMOUNT);
         }
     }
-
-//    @Override
-//    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-//                             Bundle savedInstanceState) {
-//        // Inflate the layout for this fragment
-//        return inflater.inflate(R.layout.fragment_expense, container, false);
-//    }
-
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         // Get the layout inflater
         final LayoutInflater inflater = getActivity().getLayoutInflater();
+        final View view = inflater.inflate(R.layout.fragment_expense, null);
+
+        ButterKnife.bind(this, view);
+
+        mDescriptionText.setText(mDescription);
+        mAmountTxt.setText(String.valueOf(mAmount));
+
+        if (OnExpenseEditedListener.class.isInstance(getActivity())) {
+            mListener = OnExpenseEditedListener.class.cast(getActivity());
+        } else {
+            throw new RuntimeException(getActivity().toString()
+                    + " must implement OnExpenseEditedListener");
+        }
 
         // Inflate and set the layout for the dialog
         // Pass null as the parent view because it's going in the dialog layout
-        builder.setView(inflater.inflate(R.layout.fragment_expense, null))
+        builder.setView(view)
         // add action buttons
             .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    ((OnExpenseEditedListener) getActivity()).onDialogOk("", "");
+                    //TODO handle invalid input
+                    final double amount = Double.parseDouble(mAmountTxt.getText().toString());
+                    final String description = mDescriptionText.getText().toString();
+
+                    ((OnExpenseEditedListener) getActivity()).onDialogOk(amount, description);
                 }
             })
             .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -122,6 +143,6 @@ public class ExpenseFragment extends DialogFragment {
      */
     public interface OnExpenseEditedListener {
         // TODO: Update argument type and name
-        void onDialogOk(String amount, String description);
+        void onDialogOk(double amount, String description);
     }
 }

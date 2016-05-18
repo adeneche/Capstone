@@ -32,8 +32,6 @@
             android:id="@+id/budget_progress"
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            app:rcProgress="15"
-            app:rcMax="100"
             app:rcRadius="10dp"
             app:rcProgressColor="#FF5722"
             app:rcBackgroundColor="#F0F4C3"
