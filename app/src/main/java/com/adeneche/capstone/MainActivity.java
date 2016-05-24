@@ -20,16 +20,18 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.adeneche.capstone.data.Expense;
+import com.adeneche.capstone.data.ExpenseDataSource;
 import com.akexorcist.roundcornerprogressbar.RoundCornerProgressBar;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-public class MainActivity extends AppCompatActivity implements ExpenseFragment.OnExpenseEditedListener {
+public class MainActivity extends AppCompatActivity implements ExpenseFragment.ExpenseDialogListener {
     private static final String TAG = "MainActivity";
 
     private static final String EXPENSE_DIALOG_TAG="EXPENSE_DIALOG";
@@ -40,17 +42,15 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.O
     private double spent;
 
     @BindView(R.id.toolbar) Toolbar mToolbar;
-    @BindView(R.id.expenses_list) ListView mListExpenses;
+    @BindView(R.id.list) ListView mListExpenses;
     @BindView(R.id.search_expense) SearchView mSearchView;
 
     @BindView(R.id.budget_progress) RoundCornerProgressBar mBudgetBar;
     @BindView(R.id.budget_spent) TextView mBudgetSpent;
     @BindView(R.id.budget_available) TextView mBudgetAvailable;
 
-    private final Expense[] data = {
-            Expense.to("Amazon Card", 250),
-            Expense.to("Car lease", 155),
-            Expense.to("Rent", 2145)};
+    private ExpenseDataSource mDatasource;
+
     private ArrayAdapter<Expense> mExpensesAdapter;
 
     private Expense edited;
@@ -66,24 +66,28 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.O
 
         mBudgetBar.setMax(5000);
 
+        mDatasource = new ExpenseDataSource(this);
+        mDatasource.open();
+
         initListExpenses();
         initSearchView();
     }
 
     private void initSearchView() {
         mSearchView.setOnQueryTextListener(
-                new SearchView.OnQueryTextListener() {
-                    @Override
-                    public boolean onQueryTextSubmit(String query) {
-                        mSearchView.clearFocus();
-                        return true;
-                    }
-                    @Override
-                    public boolean onQueryTextChange(String query) {
-                        filterExpenses(query);
-                        return true;
-                    }
-                });
+            new SearchView.OnQueryTextListener() {
+                @Override
+                public boolean onQueryTextSubmit(String query) {
+                    mSearchView.clearFocus();
+                    return true;
+                }
+                @Override
+                public boolean onQueryTextChange(String query) {
+                    filterExpenses(query);
+                    return true;
+                }
+            }
+        );
     }
 
     private void filterExpenses(String query) {
@@ -91,8 +95,10 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.O
     }
 
     private void initListExpenses() {
+        List<Expense> expenses = mDatasource.getAllExpenses();
+        // compute total spent (should use a query)
         spent = 0;
-        for (Expense expense : data) {
+        for (Expense expense : expenses) {
             spent += expense.getAmount();
         }
 
@@ -101,7 +107,7 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.O
         mBudgetSpent.setText(Expense.formatCurency(spent));
         mBudgetAvailable.setText(Expense.formatCurency(budget-spent));
 
-        mExpensesAdapter = new ExpenseAdapter(this, R.layout.expenselist_item, data);
+        mExpensesAdapter = new ExpenseAdapter(this, R.layout.expenselist_item, expenses);
         mListExpenses.setAdapter(mExpensesAdapter);
         mListExpenses.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -151,11 +157,13 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.O
     }
 
     @Override
-    public void onDialogOk(double amount, String description) {
+    public void onOk(double amount, String description) {
         if (edited == null) {
             Log.i(TAG, "Added new Expense(" + amount + ", " + description + ")");
             spent += amount;
-            mExpensesAdapter.add(new Expense(description, amount));
+            Expense expense = mDatasource
+                .createExpense(description, amount, new Timestamp(System.currentTimeMillis()));
+            mExpensesAdapter.add(expense);
         } else {
             Log.i(TAG, "Edited existing Expense(" + amount + ", " + description + ")");
             spent += amount - edited.getAmount();
@@ -170,13 +178,22 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.O
         mBudgetAvailable.setText(Expense.formatCurency(budget-spent));
     }
 
+    @Override
+    public void onDelete() {
+        assert edited != null : "We shouldn't delete a new expense";
+        Log.i(TAG, "Deleting expense");
+        mDatasource.deleteExpense(edited);
+        mExpensesAdapter.remove(edited);
+        edited = null;
+    }
+
     static class ExpenseAdapter extends ArrayAdapter<Expense> {
         int layoutResourceId;
 
-        public ExpenseAdapter(Context context, int resource, Expense[] data) {
+        public ExpenseAdapter(Context context, int resource, List<Expense> data) {
             super(context, resource, new ArrayList<Expense>());
             layoutResourceId = resource;
-            addAll(Arrays.asList(data));
+            addAll(data);
         }
 
         @Override

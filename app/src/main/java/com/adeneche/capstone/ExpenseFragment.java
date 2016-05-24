@@ -19,7 +19,7 @@ import butterknife.ButterKnife;
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link OnExpenseEditedListener} interface
+ * {@link ExpenseDialogListener} interface
  * to handle interaction events.
  * Use the {@link ExpenseFragment#newInstance} factory method to
  * create an instance of this fragment.
@@ -37,7 +37,7 @@ public class ExpenseFragment extends DialogFragment {
     @BindView(R.id.edit_expense_amount) EditText mAmountTxt;
     @BindView(R.id.edit_expense_description) EditText mDescriptionText;
 
-    private OnExpenseEditedListener mListener;
+    private ExpenseDialogListener mListener;
 
     public ExpenseFragment() {
         // Required empty public constructor
@@ -60,7 +60,7 @@ public class ExpenseFragment extends DialogFragment {
     }
 
     public static ExpenseFragment newInstance() {
-        return newInstance(Expense.to("", 0));
+        return newInstance(Expense.from("", 0));
     }
 
     @Override
@@ -84,11 +84,11 @@ public class ExpenseFragment extends DialogFragment {
         mDescriptionText.setText(mDescription);
         mAmountTxt.setText(String.valueOf(mAmount));
 
-        if (OnExpenseEditedListener.class.isInstance(getActivity())) {
-            mListener = OnExpenseEditedListener.class.cast(getActivity());
+        if (ExpenseDialogListener.class.isInstance(getActivity())) {
+            mListener = ExpenseDialogListener.class.cast(getActivity());
         } else {
             throw new RuntimeException(getActivity().toString()
-                    + " must implement OnExpenseEditedListener");
+                    + " must implement ExpenseDialogListener");
         }
 
         // Inflate and set the layout for the dialog
@@ -102,13 +102,19 @@ public class ExpenseFragment extends DialogFragment {
                     final double amount = Double.parseDouble(mAmountTxt.getText().toString());
                     final String description = mDescriptionText.getText().toString();
 
-                    ((OnExpenseEditedListener) getActivity()).onDialogOk(amount, description);
+                    mListener.onOk(amount, description);
                 }
             })
             .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     ExpenseFragment.this.getDialog().cancel();
+                }
+            })
+            .setNeutralButton("Delete", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    mListener.onDelete();
                 }
             });
         return builder.create();
@@ -117,11 +123,11 @@ public class ExpenseFragment extends DialogFragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if (context instanceof OnExpenseEditedListener) {
-            mListener = (OnExpenseEditedListener) context;
+        if (ExpenseDialogListener.class.isInstance(context)) {
+            mListener = ExpenseDialogListener.class.cast(context);
         } else {
             throw new RuntimeException(context.toString()
-                    + " must implement OnExpenseEditedListener");
+                    + " must implement ExpenseDialogListener");
         }
     }
 
@@ -141,8 +147,8 @@ public class ExpenseFragment extends DialogFragment {
      * "http://developer.android.com/training/basics/fragments/communicating.html"
      * >Communicating with Other Fragments</a> for more information.
      */
-    public interface OnExpenseEditedListener {
-        // TODO: Update argument type and name
-        void onDialogOk(double amount, String description);
+    public interface ExpenseDialogListener {
+        void onOk(double amount, String description);
+        void onDelete();
     }
 }
