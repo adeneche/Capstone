@@ -60,7 +60,7 @@ public class ExpenseFragment extends DialogFragment {
     }
 
     public static ExpenseFragment newInstance() {
-        return newInstance(Expense.from("", 0));
+        return newInstance(Expense.from("", 0, System.currentTimeMillis()));
     }
 
     @Override

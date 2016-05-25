@@ -1,7 +1,7 @@
 package com.adeneche.capstone.data;
 
-import java.sql.Timestamp;
 import java.text.NumberFormat;
+import java.util.Calendar;
 
 /**
  * contains a description and the amount of the expense
@@ -10,13 +10,8 @@ public class Expense {
     private long id;
     private String description;
     private double amount;
-    private Timestamp timestamp;
-
-//    public Expense(final long id, final String description, final double amount) {
-//        this.id = id;
-//        this.description = description;
-//        this.amount = amount;
-//    }
+    private int month;
+    private int year;
 
     public long getId() {
         return id;
@@ -42,12 +37,27 @@ public class Expense {
         this.amount = amount;
     }
 
-    public Timestamp getTimestamp() {
-        return timestamp;
+    public int getMonth() {
+        return month;
     }
 
-    public void setTimestamp(Timestamp timestamp) {
-        this.timestamp = timestamp;
+    public void setMonth(int month) {
+        this.month = month;
+    }
+
+    public int getYear() {
+        return year;
+    }
+
+    public void setYear(int year) {
+        this.year = year;
+    }
+
+    public void setTime(long theTime) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(theTime);
+        month = calendar.get(Calendar.MONTH);
+        year = calendar.get(Calendar.YEAR);
     }
 
     public String getFormattedAmount() {
@@ -58,19 +68,20 @@ public class Expense {
         return NumberFormat.getCurrencyInstance().format(amount);
     }
 
-    public static Expense from(final String description, final double amount) {
+    public static Expense from(final String description, final double amount, long theTime) {
         Expense expense = new Expense();
         expense.setDescription(description);
         expense.setAmount(amount);
+        expense.setTime(theTime);
         return expense;
     }
 
-    public static Expense from(long id, String desc, double amount, Timestamp timestamp) {
+    public static Expense from(long id, String desc, double amount, long theTime) {
         Expense expense = new Expense();
         expense.setId(id);
         expense.setAmount(amount);
         expense.setDescription(desc);
-        expense.setTimestamp(timestamp);
+        expense.setTime(theTime);
         return expense;
     }
 

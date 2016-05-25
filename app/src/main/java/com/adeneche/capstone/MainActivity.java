@@ -23,8 +23,8 @@ import com.adeneche.capstone.data.Expense;
 import com.adeneche.capstone.data.ExpenseDataSource;
 import com.akexorcist.roundcornerprogressbar.RoundCornerProgressBar;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 import butterknife.BindView;
@@ -95,7 +95,9 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
     }
 
     private void initListExpenses() {
-        List<Expense> expenses = mDatasource.getAllExpenses();
+        Calendar cal = Calendar.getInstance();
+        List<Expense> expenses = mDatasource.getAllExpenses(
+            cal.get(Calendar.MONTH), cal.get(Calendar.YEAR));
         // compute total spent (should use a query)
         spent = 0;
         for (Expense expense : expenses) {
@@ -161,8 +163,7 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
         if (edited == null) {
             Log.i(TAG, "Added new Expense(" + amount + ", " + description + ")");
             spent += amount;
-            Expense expense = mDatasource
-                .createExpense(description, amount, new Timestamp(System.currentTimeMillis()));
+            Expense expense = mDatasource.createExpense(description, amount, System.currentTimeMillis());
             mExpensesAdapter.add(expense);
         } else {
             Log.i(TAG, "Edited existing Expense(" + amount + ", " + description + ")");

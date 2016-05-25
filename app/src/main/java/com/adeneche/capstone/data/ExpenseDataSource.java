@@ -8,7 +8,6 @@ import android.database.sqlite.SQLiteDatabase;
 import com.adeneche.capstone.data.ExpensesContract.ExpensesDbHelper;
 import com.adeneche.capstone.data.ExpensesContract.ExpensesEntry;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,13 +23,15 @@ public class ExpenseDataSource {
         ExpensesEntry._ID,
         ExpensesEntry.COLUMN_NAME_AMOUNT,
         ExpensesEntry.COLUMN_NAME_DESC,
-        ExpensesEntry.COLUMN_NAME_DATE
+        ExpensesEntry.COLUMN_NAME_MONTH,
+        ExpensesEntry.COLUMN_NAME_YEAR
     };
 
     private static int COLUMN_IDX_ID = 0;
     private static int COLUMN_IDX_AMOUNT = 1;
     private static int COLUMN_IDX_DESC = 2;
-    private static int COLUMN_IDX_DATE = 3;
+    private static int COLUMN_IDX_MONTH = 3;
+    private static int COLUMN_IDX_YEAR = 4;
 
     public ExpenseDataSource(Context context) {
         dbHelper = new ExpensesDbHelper(context);
@@ -44,20 +45,18 @@ public class ExpenseDataSource {
         dbHelper.close();
     }
 
-    public Expense createExpense(String desc, double amount, Timestamp timestamp) {
+    public Expense createExpense(String desc, double amount, long theTime) {
+        final Expense expense = Expense.from(desc, amount, theTime);
+
         ContentValues values = new ContentValues();
-        values.put(ExpensesEntry.COLUMN_NAME_DESC, desc);
-        values.put(ExpensesEntry.COLUMN_NAME_AMOUNT, amount);
-        values.put(ExpensesEntry.COLUMN_NAME_DATE, timestamp.getTime());
+        values.put(ExpensesEntry.COLUMN_NAME_DESC, expense.getDescription());
+        values.put(ExpensesEntry.COLUMN_NAME_AMOUNT, expense.getAmount());
+        values.put(ExpensesEntry.COLUMN_NAME_MONTH, expense.getMonth());
+        values.put(ExpensesEntry.COLUMN_NAME_YEAR, expense.getYear());
 
         long insertId = database.insert(ExpensesEntry.TABLE_NAME, null, values);
-        return Expense.from(insertId, desc, amount, timestamp);
-//        Cursor cursor = database.query(ExpensesEntry.TABLE_NAME, allColumns,
-//            ExpensesEntry._ID + " = " + insertId, null, null, null, null);
-//        cursor.moveToFirst();
-//        Expense expense = cursorToExpense(cursor);
-//        cursor.close();
-//        return expense;
+        expense.setId(insertId);
+        return expense;
     }
 
     public void deleteExpense(Expense expense) {
@@ -65,11 +64,12 @@ public class ExpenseDataSource {
         database.delete(ExpensesEntry.TABLE_NAME, ExpensesEntry._ID + " = " + id, null);
     }
 
-    public List<Expense> getAllExpenses() {
+    public List<Expense> getAllExpenses(int month, int year) {
         List<Expense> expenses = new ArrayList<>();
 
         Cursor cursor = database.query(ExpensesEntry.TABLE_NAME, allColumns,
-            null, null, null, null, null);
+            "month=? and year=?", new String[]{ String.valueOf(month), String.valueOf(year) },
+            null, null, null);
 
         cursor.moveToFirst();
         while (!cursor.isAfterLast()) {
@@ -86,7 +86,8 @@ public class ExpenseDataSource {
         expense.setId(cursor.getInt(COLUMN_IDX_ID));
         expense.setAmount(cursor.getDouble(COLUMN_IDX_AMOUNT));
         expense.setDescription(cursor.getString(COLUMN_IDX_DESC));
-        expense.setTimestamp(new Timestamp(cursor.getLong(COLUMN_IDX_DATE)));
+        expense.setMonth(cursor.getInt(COLUMN_IDX_MONTH));
+        expense.setYear(cursor.getInt(COLUMN_IDX_YEAR));
         return expense;
     }
 }
