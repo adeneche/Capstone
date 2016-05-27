@@ -9,6 +9,6 @@
     <com.github.mikephil.charting.charts.BarChart
         android:id="@+id/chart"
         android:layout_width="match_parent"
-        android:layout_height="400px" />
+        android:layout_height="600px" />
 
 </FrameLayout>

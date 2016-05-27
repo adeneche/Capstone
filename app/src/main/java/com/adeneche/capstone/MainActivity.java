@@ -21,6 +21,7 @@ import android.widget.TextView;
 
 import com.adeneche.capstone.data.Expense;
 import com.adeneche.capstone.data.ExpenseDataSource;
+import com.adeneche.capstone.data.SummaryPoint;
 import com.akexorcist.roundcornerprogressbar.RoundCornerProgressBar;
 
 import java.util.ArrayList;
@@ -106,8 +107,8 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
 
         mBudgetBar.setMax((float) budget);
         mBudgetBar.setProgress((float) spent);
-        mBudgetSpent.setText(Expense.formatCurency(spent));
-        mBudgetAvailable.setText(Expense.formatCurency(budget-spent));
+        mBudgetSpent.setText(Utils.formatCurrency(spent));
+        mBudgetAvailable.setText(Utils.formatCurrency(budget-spent));
 
         mExpensesAdapter = new ExpenseAdapter(this, R.layout.expenselist_item, expenses);
         mListExpenses.setAdapter(mExpensesAdapter);
@@ -125,7 +126,8 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
     @OnClick(R.id.budget_progress)
     public void budgetBarClick() {
         FragmentManager fm = getFragmentManager();
-        SummaryFragment dialog = SummaryFragment.newInstance("", "");
+        List<SummaryPoint> summary = mDatasource.getExpensesSummary();
+        SummaryFragment dialog = SummaryFragment.newInstance(summary.toArray(new SummaryPoint[summary.size()]));
         dialog.show(fm, SUMMARY_DIALOG_TAG);
     }
 
@@ -175,8 +177,8 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
         }
 
         mBudgetBar.setProgress((float) spent);
-        mBudgetSpent.setText(Expense.formatCurency(spent));
-        mBudgetAvailable.setText(Expense.formatCurency(budget-spent));
+        mBudgetSpent.setText(Utils.formatCurrency(spent));
+        mBudgetAvailable.setText(Utils.formatCurrency(budget-spent));
     }
 
     @Override

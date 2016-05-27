@@ -9,6 +9,7 @@ import com.adeneche.capstone.data.ExpensesContract.ExpensesDbHelper;
 import com.adeneche.capstone.data.ExpensesContract.ExpensesEntry;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 /**
@@ -79,6 +80,37 @@ public class ExpenseDataSource {
 
         cursor.close();
         return expenses;
+    }
+
+    public List<SummaryPoint> getExpensesSummary() {
+        final List<SummaryPoint> summary = new ArrayList<>();
+
+        final Calendar cal = Calendar.getInstance();
+        final int year = cal.get(Calendar.YEAR);
+        final int month = cal.get(Calendar.MONTH);
+
+        // SELECT month, SUM(amount)
+        // FROM expenses
+        // GROUP BY month
+        // HAVING month > current_month-6
+        // ORDER BY month
+        Cursor cursor = database.query(ExpensesEntry.TABLE_NAME,
+                new String[]{ "month", "SUM(amount)"}, // select clause
+                null, null, // where clause
+                "month", // group by clause
+                "year = " + year + " AND month > " + (month-6), // having clause
+                "year, month", // order by
+                null
+                );
+
+        cursor.moveToFirst();
+        while (!cursor.isAfterLast()) {
+            summary.add(new SummaryPoint(cursor.getInt(0), cursor.getDouble(1)));
+            cursor.moveToNext();
+        }
+        cursor.close();
+
+        return summary;
     }
 
     private Expense cursorToExpense(Cursor cursor) {

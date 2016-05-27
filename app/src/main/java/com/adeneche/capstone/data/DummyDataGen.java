@@ -6,6 +6,7 @@ import android.database.sqlite.SQLiteDatabase;
 import com.adeneche.capstone.data.ExpensesContract.ExpensesEntry;
 
 import java.util.Calendar;
+import java.util.Random;
 
 /**
  * Utility class to generate 6 months worth of expenses
@@ -39,13 +40,14 @@ public class DummyDataGen {
 
     public void generateExpenses() {
         Calendar calendar = Calendar.getInstance();
+        Random rng = new Random();
         int year = calendar.get(Calendar.YEAR);
         int month = calendar.get(Calendar.MONTH);
-        double minExpenses = 1000;
-        double maxExpenses = 4000;
+        int minExpenses = 1;
+        int maxExpenses = 4;
 
-        for (int i = 0; i < 6; i++) {
-            insertMonth(month-i, year, Math.random()*(maxExpenses-minExpenses)+minExpenses);
+        for (int i = 0; i < 6 && month-i >= 0; i++) {
+            insertMonth(month-i, year, 1000*(rng.nextInt(maxExpenses-minExpenses)+minExpenses));
         }
     }
 }

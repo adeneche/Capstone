@@ -1,6 +1,7 @@
 package com.adeneche.capstone.data;
 
-import java.text.NumberFormat;
+import com.adeneche.capstone.Utils;
+
 import java.util.Calendar;
 
 /**
@@ -61,11 +62,7 @@ public class Expense {
     }
 
     public String getFormattedAmount() {
-        return formatCurency(amount);
-    }
-
-    public static String formatCurency(double amount) {
-        return NumberFormat.getCurrencyInstance().format(amount);
+        return Utils.formatCurrency(amount);
     }
 
     public static Expense from(final String description, final double amount, long theTime) {
