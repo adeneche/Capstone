@@ -24,6 +24,8 @@ import com.adeneche.capstone.data.Expense;
 import com.adeneche.capstone.data.ExpenseDataSource;
 import com.adeneche.capstone.data.SummaryPoint;
 import com.akexorcist.roundcornerprogressbar.RoundCornerProgressBar;
+import com.google.android.gms.analytics.HitBuilders;
+import com.google.android.gms.analytics.Tracker;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -59,6 +61,8 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
 
     private Expense edited;
 
+    private Tracker mTracker;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -79,6 +83,10 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
 
         initListExpenses();
         initSearchView();
+
+        // Obtain the shared Tracker instance.
+        ExpensesApplication application = (ExpensesApplication) getApplication();
+        mTracker = application.getDefaultTracker();
     }
 
     private void initSearchView() {
@@ -136,6 +144,11 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
         List<SummaryPoint> summary = mDatasource.getExpensesSummary();
         SummaryFragment dialog = SummaryFragment.newInstance(summary.toArray(new SummaryPoint[summary.size()]));
         dialog.show(fm, SUMMARY_DIALOG_TAG);
+
+        mTracker.send(new HitBuilders.EventBuilder()
+                .setCategory("Budget")
+                .setAction("Click")
+                .build());
     }
 
     @OnClick(R.id.fab)
@@ -174,6 +187,11 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
             spent += amount;
             Expense expense = mDatasource.createExpense(description, amount, System.currentTimeMillis());
             mExpensesAdapter.add(expense);
+
+            mTracker.send(new HitBuilders.EventBuilder()
+                    .setCategory("Expense")
+                    .setAction("Add")
+                    .build());
         } else {
             Log.i(TAG, "Edited existing Expense(" + amount + ", " + description + ")");
             spent += amount - edited.getAmount();
@@ -181,6 +199,11 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
             edited.setDescription(description);
             mExpensesAdapter.notifyDataSetChanged();
             edited = null;
+
+            mTracker.send(new HitBuilders.EventBuilder()
+                    .setCategory("Expense")
+                    .setAction("Edit")
+                    .build());
         }
 
         mBudgetBar.setProgress((float) spent);
@@ -195,6 +218,11 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
         mDatasource.deleteExpense(edited);
         mExpensesAdapter.remove(edited);
         edited = null;
+
+        mTracker.send(new HitBuilders.EventBuilder()
+                .setCategory("Expense")
+                .setAction("Delete")
+                .build());
     }
 
     static class ExpenseAdapter extends ArrayAdapter<Expense> {
