@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "353359988507",
+    "project_id": "expenses-1326"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:353359988507:android:fd7a67309d6c3de0",
+        "android_client_info": {
+          "package_name": "com.adeneche.capstone"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "353359988507-h7uibq9bqqilrhhs0a6aeh0vm2jsb9aj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.adeneche.capstone",
+            "certificate_hash": "0A9C9FEC9045D5E3FB671C0E86693E21C6495FFE"
+          }
+        },
+        {
+          "client_id": "353359988507-90375tgoe14tfenb1b7rkimquuttpug8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAZ1dDbObs2E9qKUpgwkth3EqjZSJQvxKE"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

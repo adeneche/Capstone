@@ -16,6 +16,7 @@ public final class ExpensesContract {
         public static final String COLUMN_NAME_DESC = "desc";
         public static final String COLUMN_NAME_MONTH = "month";
         public static final String COLUMN_NAME_YEAR = "year";
+        public static final String COLUMN_NAME_EMAIL = "email";
     }
 
     private static final String TEXT_TYPE = " TEXT";
@@ -28,25 +29,29 @@ public final class ExpensesContract {
         ExpensesEntry.COLUMN_NAME_AMOUNT + REAL_TYPE + COMMA_SEP +
         ExpensesEntry.COLUMN_NAME_DESC + TEXT_TYPE + COMMA_SEP +
         ExpensesEntry.COLUMN_NAME_MONTH + INT_TYPE + COMMA_SEP +
-        ExpensesEntry.COLUMN_NAME_YEAR + INT_TYPE +
+        ExpensesEntry.COLUMN_NAME_YEAR + INT_TYPE + COMMA_SEP +
+        ExpensesEntry.COLUMN_NAME_EMAIL + TEXT_TYPE +
         " )";
     private static final String SQL_DELETE_EXPENSES =
         "DROP TABLE IF EXISTS " + ExpensesEntry.TABLE_NAME;
 
     public static class ExpensesDbHelper extends SQLiteOpenHelper {
         // If you change the database schema, you must increment the database version.
-        public static final int DATABASE_VERSION = 2;
+        public static final int DATABASE_VERSION = 1;
         public static final String DATABASE_NAME = "Expenses.db";
 
-        public ExpensesDbHelper(Context context) {
+        private final String email;
+
+        public ExpensesDbHelper(Context context, String email) {
             super(context, DATABASE_NAME, null, DATABASE_VERSION);
+            this.email = email;
         }
 
         @Override
         public void onCreate(SQLiteDatabase db) {
             db.execSQL(SQL_CREATE_EXPENSES);
             // insert some dummy data
-            new DummyDataGen(db).generateExpenses();
+            new DummyDataGen(db, email).generateExpenses();
         }
 
         @Override

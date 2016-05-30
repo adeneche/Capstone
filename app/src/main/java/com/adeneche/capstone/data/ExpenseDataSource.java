@@ -25,7 +25,8 @@ public class ExpenseDataSource {
         ExpensesEntry.COLUMN_NAME_AMOUNT,
         ExpensesEntry.COLUMN_NAME_DESC,
         ExpensesEntry.COLUMN_NAME_MONTH,
-        ExpensesEntry.COLUMN_NAME_YEAR
+        ExpensesEntry.COLUMN_NAME_YEAR,
+        ExpensesEntry.COLUMN_NAME_EMAIL
     };
 
     private static int COLUMN_IDX_ID = 0;
@@ -33,9 +34,13 @@ public class ExpenseDataSource {
     private static int COLUMN_IDX_DESC = 2;
     private static int COLUMN_IDX_MONTH = 3;
     private static int COLUMN_IDX_YEAR = 4;
+    private static int COLUMN_IDX_EMAIL = 5;
 
-    public ExpenseDataSource(Context context) {
-        dbHelper = new ExpensesDbHelper(context);
+    private final String email;
+
+    public ExpenseDataSource(Context context, String email) {
+        dbHelper = new ExpensesDbHelper(context, email);
+        this.email = email;
     }
 
     public void open() {
@@ -54,6 +59,7 @@ public class ExpenseDataSource {
         values.put(ExpensesEntry.COLUMN_NAME_AMOUNT, expense.getAmount());
         values.put(ExpensesEntry.COLUMN_NAME_MONTH, expense.getMonth());
         values.put(ExpensesEntry.COLUMN_NAME_YEAR, expense.getYear());
+        values.put(ExpensesEntry.COLUMN_NAME_EMAIL, email);
 
         long insertId = database.insert(ExpensesEntry.TABLE_NAME, null, values);
         expense.setId(insertId);
@@ -69,7 +75,8 @@ public class ExpenseDataSource {
         List<Expense> expenses = new ArrayList<>();
 
         Cursor cursor = database.query(ExpensesEntry.TABLE_NAME, allColumns,
-            "month=? and year=?", new String[]{ String.valueOf(month), String.valueOf(year) },
+            "email=? and month=? and year=?",
+            new String[]{ email, String.valueOf(month), String.valueOf(year) },
             null, null, null);
 
         cursor.moveToFirst();
@@ -92,13 +99,13 @@ public class ExpenseDataSource {
         // SELECT month, SUM(amount)
         // FROM expenses
         // GROUP BY month
-        // HAVING month > current_month-6
+        // HAVING email=<email> and year=<year> and month > <current_month>-6
         // ORDER BY month
         Cursor cursor = database.query(ExpensesEntry.TABLE_NAME,
                 new String[]{ "month", "SUM(amount)"}, // select clause
                 null, null, // where clause
                 "month", // group by clause
-                "year = " + year + " AND month > " + (month-6), // having clause
+                "email=" + email + " year=" + year + " AND month > " + (month-6), // having clause
                 "year, month", // order by
                 null
                 );

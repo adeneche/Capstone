@@ -3,6 +3,7 @@ package com.adeneche.capstone;
 import android.app.Activity;
 import android.app.FragmentManager;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
@@ -38,6 +39,8 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
     private static final String EXPENSE_DIALOG_TAG="EXPENSE_DIALOG";
     private static final String SUMMARY_DIALOG_TAG="SUMMARY_DIALOG";
 
+    public static final String EXTRA_EMAIL = "email";
+
     //TODO load this from app properties
     private final double budget = 4000.0;
     private double spent;
@@ -67,7 +70,11 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
 
         mBudgetBar.setMax(5000);
 
-        mDatasource = new ExpenseDataSource(this);
+        Intent intent = getIntent();
+        String email = intent.getStringExtra(EXTRA_EMAIL);
+        Log.i(TAG, "Signed in as " + email);
+
+        mDatasource = new ExpenseDataSource(this, email);
         mDatasource.open();
 
         initListExpenses();

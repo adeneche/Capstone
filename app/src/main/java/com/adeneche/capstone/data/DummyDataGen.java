@@ -14,9 +14,11 @@ import java.util.Random;
 public class DummyDataGen {
 
     private final SQLiteDatabase db;
+    private final String email;
 
-    public DummyDataGen(SQLiteDatabase db) {
+    public DummyDataGen(SQLiteDatabase db, String email) {
         this.db = db;
+        this.email = email;
     }
 
     private void insertExpense(String desc, double amount, int month, int year) {
@@ -25,6 +27,7 @@ public class DummyDataGen {
         values.put(ExpensesEntry.COLUMN_NAME_AMOUNT, amount);
         values.put(ExpensesEntry.COLUMN_NAME_MONTH, month);
         values.put(ExpensesEntry.COLUMN_NAME_YEAR, year);
+        values.put(ExpensesEntry.COLUMN_NAME_EMAIL, email);
 
         db.insert(ExpensesEntry.TABLE_NAME, null, values);
     }
