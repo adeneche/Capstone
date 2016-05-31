@@ -5,7 +5,6 @@ import android.app.FragmentManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
@@ -42,6 +41,7 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
     private static final String SUMMARY_DIALOG_TAG="SUMMARY_DIALOG";
 
     public static final String EXTRA_EMAIL = "email";
+    public static final String ACTION_ADD_EXPENSE = "add_expense";
 
     //TODO load this from app properties
     private final double budget = 4000.0;
@@ -75,8 +75,16 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
         mBudgetBar.setMax(5000);
 
         Intent intent = getIntent();
-        String email = intent.getStringExtra(EXTRA_EMAIL);
-        Log.i(TAG, "Signed in as " + email);
+        String email;
+        boolean addExpense = false;
+        if (ACTION_ADD_EXPENSE.equals(intent.getAction())) {
+            //TODO fix this by requesting sign in at this point
+            email = "adeneche@gmail.com";
+            addExpense = true;
+        } else {
+            email = intent.getStringExtra(EXTRA_EMAIL);
+            Log.i(TAG, "Signed in as " + email);
+        }
 
         mDatasource = new ExpenseDataSource(this, email);
         mDatasource.open();
@@ -87,6 +95,10 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
         // Obtain the shared Tracker instance.
         ExpensesApplication application = (ExpensesApplication) getApplication();
         mTracker = application.getDefaultTracker();
+
+        if (addExpense) {
+            showAddDialog();
+        }
     }
 
     private void initSearchView() {
@@ -152,7 +164,11 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
     }
 
     @OnClick(R.id.fab)
-    public void fabClick(FloatingActionButton fab) {
+    public void fabClick() {
+        showAddDialog();
+    }
+
+    private void showAddDialog() {
         FragmentManager fm = getFragmentManager();
         ExpenseFragment dialog = ExpenseFragment.newInstance();
         dialog.show(fm, EXPENSE_DIALOG_TAG);

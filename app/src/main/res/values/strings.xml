@@ -18,4 +18,6 @@
 
     <!-- Content Description for images -->
     <string name="desc_google_icon">Google Logo</string>
+
+    <string name="widget_add_button">+</string>
 </resources>
