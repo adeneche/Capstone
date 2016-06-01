@@ -89,6 +89,28 @@ public class ExpenseDataSource {
         return expenses;
     }
 
+    public double getTotalSpent(int month, int year) {
+        double total = 0;
+
+        // SELECT SUM(amount)
+        // FROM TABLE_NAME
+        // GROUP BY email, year, month
+        // HAVING email=<email> and year=<year> and month=<month>
+        Cursor cursor = database.query(ExpensesEntry.TABLE_NAME,
+                new String[]{ "sum(amount)"}, null, null,
+                "email, year, month",
+                "email=\""+email+"\" AND year="+year+" AND month="+month,
+                null, null);
+
+        cursor.moveToFirst();
+        if (!cursor.isAfterLast()) {
+            total = cursor.getDouble(0);
+        }
+        cursor.close();
+
+        return total;
+    }
+
     public List<SummaryPoint> getExpensesSummary() {
         final List<SummaryPoint> summary = new ArrayList<>();
 
@@ -105,7 +127,7 @@ public class ExpenseDataSource {
                 new String[]{ "month", "SUM(amount)"}, // select clause
                 null, null, // where clause
                 "month", // group by clause
-                "email=" + email + " year=" + year + " AND month > " + (month-6), // having clause
+                "email=\"" + email + "\"AND year=" + year + " AND month > " + (month-6), // having clause
                 "year, month", // order by
                 null
                 );

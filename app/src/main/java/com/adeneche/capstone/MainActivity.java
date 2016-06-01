@@ -2,6 +2,7 @@ package com.adeneche.capstone;
 
 import android.app.Activity;
 import android.app.FragmentManager;
+import android.appwidget.AppWidgetManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -101,6 +102,15 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
         }
     }
 
+    private void updateWidget() {
+        Intent intent = new Intent(this, ExpenseAppWidgetProvider.class);
+        intent.setAction(ExpenseAppWidgetProvider.ACTION_UPDATE_TOTAL_SPENT);
+        int[] ids = { 0 };
+        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids);
+        intent.putExtra(ExpenseAppWidgetProvider.EXTRA_AMOUNT, spent);
+        sendBroadcast(intent);
+    }
+
     private void initSearchView() {
         mSearchView.setOnQueryTextListener(
             new SearchView.OnQueryTextListener() {
@@ -124,13 +134,11 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
 
     private void initListExpenses() {
         Calendar cal = Calendar.getInstance();
-        List<Expense> expenses = mDatasource.getAllExpenses(
-            cal.get(Calendar.MONTH), cal.get(Calendar.YEAR));
-        // compute total spent (should use a query)
-        spent = 0;
-        for (Expense expense : expenses) {
-            spent += expense.getAmount();
-        }
+        int month = cal.get(Calendar.MONTH);
+        int year = cal.get(Calendar.YEAR);
+
+        List<Expense> expenses = mDatasource.getAllExpenses(month, year);
+        spent = mDatasource.getTotalSpent(month, year);
 
         mBudgetBar.setMax((float) budget);
         mBudgetBar.setProgress((float) spent);
@@ -225,6 +233,8 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
         mBudgetBar.setProgress((float) spent);
         mBudgetSpent.setText(Utils.formatCurrency(spent));
         mBudgetAvailable.setText(Utils.formatCurrency(budget-spent));
+
+        updateWidget();
     }
 
     @Override
