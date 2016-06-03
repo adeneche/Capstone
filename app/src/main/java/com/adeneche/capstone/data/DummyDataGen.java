@@ -1,7 +1,7 @@
 package com.adeneche.capstone.data;
 
 import android.content.ContentValues;
-import android.database.sqlite.SQLiteDatabase;
+import android.content.Context;
 
 import com.adeneche.capstone.data.ExpensesContract.ExpensesEntry;
 
@@ -13,23 +13,24 @@ import java.util.Random;
  */
 public class DummyDataGen {
 
-    private final SQLiteDatabase db;
+    private final Context context;
     private final String email;
 
-    public DummyDataGen(SQLiteDatabase db, String email) {
-        this.db = db;
+    public DummyDataGen(Context context, String email) {
+        this.context = context;
         this.email = email;
     }
 
     private void insertExpense(String desc, double amount, int month, int year) {
         ContentValues values = new ContentValues();
-        values.put(ExpensesEntry.COLUMN_NAME_DESC, desc);
-        values.put(ExpensesEntry.COLUMN_NAME_AMOUNT, amount);
-        values.put(ExpensesEntry.COLUMN_NAME_MONTH, month);
-        values.put(ExpensesEntry.COLUMN_NAME_YEAR, year);
-        values.put(ExpensesEntry.COLUMN_NAME_EMAIL, email);
+        values.put(ExpensesEntry.COLUMN_DESC, desc);
+        values.put(ExpensesEntry.COLUMN_AMOUNT, amount);
+        values.put(ExpensesEntry.COLUMN_MONTH, month);
+        values.put(ExpensesEntry.COLUMN_YEAR, year);
+        values.put(ExpensesEntry.COLUMN_EMAIL, email);
 
-        db.insert(ExpensesEntry.TABLE_NAME, null, values);
+        //TODO implement and use bulkInsert
+        context.getContentResolver().insert(ExpensesEntry.CONTENT_URI, values);
     }
 
     private void insertMonth(int month, int year, double totalExpenses) {

@@ -1,4 +1,4 @@
-package com.adeneche.capstone.data;
+package com.adeneche.capstone.data.pojo;
 
 import android.os.Parcel;
 import android.os.Parcelable;

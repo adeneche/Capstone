@@ -1,6 +1,9 @@
-package com.adeneche.capstone.data;
+package com.adeneche.capstone.data.pojo;
+
+import android.database.Cursor;
 
 import com.adeneche.capstone.Utils;
+import com.adeneche.capstone.data.ExpensesProvider;
 
 import java.util.Calendar;
 
@@ -79,6 +82,16 @@ public class Expense {
         expense.setAmount(amount);
         expense.setDescription(desc);
         expense.setTime(theTime);
+        return expense;
+    }
+
+    public static Expense from(Cursor cursor) {
+        Expense expense = new Expense();
+        expense.setId(cursor.getInt(ExpensesProvider.COLUMN_IDX_ID));
+        expense.setAmount(cursor.getDouble(ExpensesProvider.COLUMN_IDX_AMOUNT));
+        expense.setDescription(cursor.getString(ExpensesProvider.COLUMN_IDX_DESC));
+        expense.setMonth(cursor.getInt(ExpensesProvider.COLUMN_IDX_MONTH));
+        expense.setYear(cursor.getInt(ExpensesProvider.COLUMN_IDX_YEAR));
         return expense;
     }
 

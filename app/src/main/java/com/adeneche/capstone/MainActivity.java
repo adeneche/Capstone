@@ -1,33 +1,30 @@
 package com.adeneche.capstone;
 
-import android.app.Activity;
 import android.app.FragmentManager;
 import android.appwidget.AppWidgetManager;
-import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
-import com.adeneche.capstone.data.Expense;
+import com.adeneche.capstone.data.DummyDataGen;
 import com.adeneche.capstone.data.ExpenseDataSource;
-import com.adeneche.capstone.data.SummaryPoint;
+import com.adeneche.capstone.data.ExpensesContract;
+import com.adeneche.capstone.data.pojo.SummaryPoint;
 import com.akexorcist.roundcornerprogressbar.RoundCornerProgressBar;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
@@ -58,9 +55,9 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
 
     private ExpenseDataSource mDatasource;
 
-    private ArrayAdapter<Expense> mExpensesAdapter;
+    private SimpleCursorAdapter mExpensesAdapter;
 
-    private Expense edited;
+    private long edited = -1;
 
     private Tracker mTracker;
 
@@ -90,7 +87,7 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
         mDatasource = new ExpenseDataSource(this, email);
         mDatasource.open();
 
-        initListExpenses();
+        initListExpenses(email);
         initSearchView();
 
         // Obtain the shared Tracker instance.
@@ -132,12 +129,21 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
         mExpensesAdapter.getFilter().filter(query);
     }
 
-    private void initListExpenses() {
+    private void initListExpenses(String email) {
         Calendar cal = Calendar.getInstance();
         int month = cal.get(Calendar.MONTH);
         int year = cal.get(Calendar.YEAR);
 
-        List<Expense> expenses = mDatasource.getAllExpenses(month, year);
+        Cursor cursor = mDatasource.getAllExpenses(month, year);
+
+        if (cursor.getCount() == 0) {
+            Log.d(TAG, "Empty DB, adding some dummy data");
+            // insert some dummy data
+            new DummyDataGen(this, email).generateExpenses();
+
+            cursor = mDatasource.getAllExpenses(month, year);
+        }
+
         spent = mDatasource.getTotalSpent(month, year);
 
         mBudgetBar.setMax((float) budget);
@@ -145,13 +151,22 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
         mBudgetSpent.setText(Utils.formatCurrency(spent));
         mBudgetAvailable.setText(Utils.formatCurrency(budget-spent));
 
-        mExpensesAdapter = new ExpenseAdapter(this, R.layout.expenselist_item, expenses);
+        final String[] from = {
+            ExpensesContract.ExpensesEntry.COLUMN_DESC,
+            ExpensesContract.ExpensesEntry.COLUMN_AMOUNT
+        };
+        final int[] to = {
+            R.id.expense_description,
+            R.id.expense_amount
+        };
+        mExpensesAdapter = new SimpleCursorAdapter(this, R.layout.expenselist_item, cursor, from, to, 0);
         mListExpenses.setAdapter(mExpensesAdapter);
         mListExpenses.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 final FragmentManager fm = getFragmentManager();
-                edited = mExpensesAdapter.getItem(position);
+                // TODO just store id and pass it to dialog
+                edited = id;
                 ExpenseFragment dialog = ExpenseFragment.newInstance(edited);
                 dialog.show(fm, EXPENSE_DIALOG_TAG);
             }
@@ -206,11 +221,12 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
 
     @Override
     public void onOk(double amount, String description) {
-        if (edited == null) {
+        if (edited == -1) {
             Log.i(TAG, "Added new Expense(" + amount + ", " + description + ")");
             spent += amount;
-            Expense expense = mDatasource.createExpense(description, amount, System.currentTimeMillis());
-            mExpensesAdapter.add(expense);
+            //TODO fix this to use mDatasource
+//            Expense expense = mDatasource.createExpense(description, amount, System.currentTimeMillis());
+//            mExpensesAdapter.add(expense);
 
             mTracker.send(new HitBuilders.EventBuilder()
                     .setCategory("Expense")
@@ -218,11 +234,12 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
                     .build());
         } else {
             Log.i(TAG, "Edited existing Expense(" + amount + ", " + description + ")");
-            spent += amount - edited.getAmount();
-            edited.setAmount(amount);
-            edited.setDescription(description);
+            //TODO update list and budget info
+//            spent += amount - edited.getAmount();
+//            edited.setAmount(amount);
+//            edited.setDescription(description);
             mExpensesAdapter.notifyDataSetChanged();
-            edited = null;
+            edited = -1;
 
             mTracker.send(new HitBuilders.EventBuilder()
                     .setCategory("Expense")
@@ -239,48 +256,20 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
 
     @Override
     public void onDelete() {
-        assert edited != null : "We shouldn't delete a new expense";
+        if (BuildConfig.DEBUG) {
+            if (edited == -1) throw new IllegalStateException("We are trying to delete a new expense");
+        }
+
         Log.i(TAG, "Deleting expense");
         mDatasource.deleteExpense(edited);
-        mExpensesAdapter.remove(edited);
-        edited = null;
+        //TODO fix this to use mDatasource
+//        mExpensesAdapter.remove(edited);
+        edited = -1;
 
         mTracker.send(new HitBuilders.EventBuilder()
                 .setCategory("Expense")
                 .setAction("Delete")
                 .build());
-    }
-
-    static class ExpenseAdapter extends ArrayAdapter<Expense> {
-        int layoutResourceId;
-
-        public ExpenseAdapter(Context context, int resource, List<Expense> data) {
-            super(context, resource, new ArrayList<Expense>());
-            layoutResourceId = resource;
-            addAll(data);
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            View view = convertView;
-            ExpenseHolder holder;
-
-            if (view == null) {
-                LayoutInflater inflater = ((Activity) getContext()).getLayoutInflater();
-                view = inflater.inflate(layoutResourceId, parent, false);
-
-                holder = new ExpenseHolder(view);
-                view.setTag(holder);
-            } else {
-                holder = (ExpenseHolder) view.getTag();
-            }
-
-            final Expense expense = getItem(position);
-
-            holder.description.setText(expense.getDescription());
-            holder.amount.setText(expense.getFormattedAmount());
-            return view;
-        }
     }
 
     static class ExpenseHolder {

@@ -41,6 +41,10 @@
             <meta-data android:name="android.appwidget.provider"
                 android:resource="@xml/expense_appwidget_info" />
         </receiver>
+        
+        <provider
+            android:authorities="com.adeneche.capstone"
+            android:name=".data.ExpensesProvider" />
     </application>
 
 </manifest>
