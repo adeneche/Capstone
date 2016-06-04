@@ -50,7 +50,7 @@ public class MainActivity extends AppCompatActivity
 
     private String mEmail;
 
-    //TODO load this from app properties
+    //TODO load this from settings
     private final double budget = 4000.0;
     private double spent;
 
@@ -133,13 +133,12 @@ public class MainActivity extends AppCompatActivity
             if (data.moveToFirst()) {
                 spent = data.getDouble(0);
             }
-            //TODO should I explicitely close data cursor ?
+            //TODO should I explicitly close data cursor ?
 
             mBudgetBar.setProgress((float) spent);
             mBudgetSpent.setText(Utils.formatCurrency(spent));
             mBudgetAvailable.setText(Utils.formatCurrency(budget-spent));
 
-            //TODO use loader to update widget automatically
             updateWidget();
         }
     }
@@ -296,8 +295,6 @@ public class MainActivity extends AppCompatActivity
 
         Log.i(TAG, "Deleting expense");
         getContentResolver().delete(ExpensesContract.buildExpenseUri(edited), null, null);
-        //TODO fix this
-//        mExpensesAdapter.remove(edited);
         edited = -1;
 
         mTracker.send(new HitBuilders.EventBuilder()
@@ -337,11 +334,11 @@ public class MainActivity extends AppCompatActivity
             view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-//                    final FragmentManager fm = getFragmentManager();
-                    // TODO just store id and pass it to dialog
-//                    edited = view.getId();
-//                    ExpenseFragment dialog = ExpenseFragment.newInstance(edited);
-//                    dialog.show(fm, EXPENSE_DIALOG_TAG);
+                    edited = Adapter.this.getItemId(eh.getAdapterPosition());
+
+                    final FragmentManager fm = getFragmentManager();
+                    ExpenseFragment dialog = ExpenseFragment.newInstance(edited);
+                    dialog.show(fm, EXPENSE_DIALOG_TAG);
                 }
             });
             return eh;
@@ -352,6 +349,8 @@ public class MainActivity extends AppCompatActivity
             mCursor.moveToPosition(position);
             holder.description.setText(mCursor.getString(mCursor.getColumnIndex(ExpensesContract.ExpensesEntry.COLUMN_DESC)));
             holder.amount.setText(Utils.formatCurrency(mCursor.getDouble(mCursor.getColumnIndex(ExpensesContract.ExpensesEntry.COLUMN_AMOUNT))));
+
+
         }
 
         @Override
