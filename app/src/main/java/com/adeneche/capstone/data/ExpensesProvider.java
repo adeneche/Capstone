@@ -24,7 +24,7 @@ public class ExpensesProvider extends ContentProvider {
     private ExpensesDbHelper mDBHelper;
 
     static final int INSERT_EXPENSE = 100;
-    static final int GET_EXPENSE = 101;
+    static final int EXPENSE_WITH_ID = 101;
     static final int ALL_EXPENSES = 102;
     static final int GET_TOTAL_SPENT = 103;
     static final int GET_SUMMARY = 104;
@@ -114,7 +114,7 @@ public class ExpensesProvider extends ContentProvider {
         final String authority = ExpensesContract.CONTENT_AUTHORITY;
 
         uriMatcher.addURI(authority, ExpensesContract.PATH_EXPENSE, INSERT_EXPENSE);
-        uriMatcher.addURI(authority, ExpensesContract.PATH_EXPENSE + "/#", GET_EXPENSE);
+        uriMatcher.addURI(authority, ExpensesContract.PATH_EXPENSE + "/#", EXPENSE_WITH_ID);
         uriMatcher.addURI(authority, ExpensesContract.PATH_EXPENSE + "/*/#/#/all", ALL_EXPENSES);
         uriMatcher.addURI(authority, ExpensesContract.PATH_EXPENSE + "/*/#/#/spent", GET_TOTAL_SPENT);
         uriMatcher.addURI(authority, ExpensesContract.PATH_EXPENSE + "/*/#/#/summary", GET_SUMMARY);
@@ -136,7 +136,7 @@ public class ExpensesProvider extends ContentProvider {
 
         Cursor cursor;
         switch (sUriMatcher.match(uri)) {
-            case GET_EXPENSE:
+            case EXPENSE_WITH_ID:
                 cursor = getExpense(uri);
                 break;
             case ALL_EXPENSES:
@@ -161,7 +161,7 @@ public class ExpensesProvider extends ContentProvider {
         final int match = sUriMatcher.match(uri);
 
         switch (match) {
-            case GET_EXPENSE:
+            case EXPENSE_WITH_ID:
                 return ExpensesEntry.CONTENT_ITEM_TYPE;
             case ALL_EXPENSES:
                 return ExpensesEntry.CONTENT_TYPE;
@@ -192,7 +192,7 @@ public class ExpensesProvider extends ContentProvider {
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
-        getContext().getContentResolver().notifyChange(uri, null);
+        getContext().getContentResolver().notifyChange(ExpensesEntry.CONTENT_URI, null);
         db.close();
         return returnUri;
 
@@ -207,7 +207,7 @@ public class ExpensesProvider extends ContentProvider {
         int rowsDeleted;
 
         switch (match) {
-            case GET_EXPENSE:
+            case EXPENSE_WITH_ID:
                 selection = ExpensesEntry._ID + " = ?";
                 selectionArgs = new String[] { ExpensesContract.getIdFromUri(uri) };
                 rowsDeleted = db.delete(ExpensesEntry.TABLE_NAME, selection, selectionArgs);
@@ -217,7 +217,8 @@ public class ExpensesProvider extends ContentProvider {
         }
 
         if (rowsDeleted != 0) {
-            getContext().getContentResolver().notifyChange(uri, null);
+            Log.d(LOG_TAG, "notifying content resolver that " + rowsDeleted + " rows were deleted");
+            getContext().getContentResolver().notifyChange(ExpensesEntry.CONTENT_URI, null);
         }
 
         return rowsDeleted;
@@ -225,12 +226,13 @@ public class ExpensesProvider extends ContentProvider {
 
     @Override
     public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
+        Log.d(LOG_TAG, "update "+uri+", values: "+values);
         final SQLiteDatabase db = mDBHelper.getWritableDatabase();
         final int match = sUriMatcher.match(uri);
         int rowsUpdated;
 
         switch (match) {
-            case INSERT_EXPENSE:
+            case EXPENSE_WITH_ID:
                 selection = ExpensesEntry._ID + " = ?";
                 selectionArgs = new String[] { ExpensesContract.getIdFromUri(uri) };
                 rowsUpdated = db.update(ExpensesEntry.TABLE_NAME, values, selection, selectionArgs);
@@ -240,7 +242,7 @@ public class ExpensesProvider extends ContentProvider {
         }
 
         if (rowsUpdated != 0) {
-            getContext().getContentResolver().notifyChange(uri, null);
+            getContext().getContentResolver().notifyChange(ExpensesEntry.CONTENT_URI, null);
         }
 
         return rowsUpdated;

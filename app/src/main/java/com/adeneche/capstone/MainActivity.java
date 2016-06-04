@@ -1,10 +1,13 @@
 package com.adeneche.capstone;
 
 import android.app.FragmentManager;
+import android.app.LoaderManager;
 import android.appwidget.AppWidgetManager;
+import android.content.ContentValues;
+import android.content.CursorLoader;
 import android.content.Intent;
+import android.content.Loader;
 import android.database.Cursor;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
@@ -18,7 +21,6 @@ import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
-import com.adeneche.capstone.data.DummyDataGen;
 import com.adeneche.capstone.data.ExpensesContract;
 import com.adeneche.capstone.data.pojo.SummaryPoint;
 import com.akexorcist.roundcornerprogressbar.RoundCornerProgressBar;
@@ -33,7 +35,8 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-public class MainActivity extends AppCompatActivity implements ExpenseFragment.ExpenseDialogListener {
+public class MainActivity extends AppCompatActivity
+        implements ExpenseFragment.ExpenseDialogListener, LoaderManager.LoaderCallbacks<Cursor> {
     private static final String TAG = "MainActivity";
 
     private static final String EXPENSE_DIALOG_TAG="EXPENSE_DIALOG";
@@ -41,6 +44,9 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
 
     public static final String EXTRA_EMAIL = "email";
     public static final String ACTION_ADD_EXPENSE = "add_expense";
+
+    private static final int EXPENSES_LOADER_ID = 1007;
+    private static final int SPENT_LOADER_ID = 2008;
 
     private String mEmail;
 
@@ -86,10 +92,10 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
             Log.i(TAG, "Signed in as " + mEmail);
         }
 
-//        mDatasource = new ExpenseDataSource(this, mEmail);
-//        mDatasource.open();
+        getLoaderManager().initLoader(EXPENSES_LOADER_ID, null, this);
+        getLoaderManager().initLoader(SPENT_LOADER_ID, null, this);
 
-        initListExpenses();
+        setupListExpenses();
         initSearchView();
 
         // Obtain the shared Tracker instance.
@@ -98,6 +104,55 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
 
         if (addExpense) {
             showAddDialog();
+        }
+
+    }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        Log.d(TAG, "onCreateLoader " + id);
+        Calendar cal = Calendar.getInstance();
+        int month = cal.get(Calendar.MONTH);
+        int year = cal.get(Calendar.YEAR);
+
+        if (id == EXPENSES_LOADER_ID) {
+            return new CursorLoader(this,
+                ExpensesContract.buildGetAllExpensesUri(mEmail, month, year), null, null, null, null);
+        } else {
+            return new CursorLoader(this,
+                ExpensesContract.buildSpent(mEmail, month, year), null, null, null, null);
+        }
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        Log.d(TAG, "onLoadFinished " + loader.getId());
+        if (loader.getId() == EXPENSES_LOADER_ID) {
+            mExpensesAdapter.swapCursor(data);
+        } else {
+            if (data.moveToFirst()) {
+                spent = data.getDouble(0);
+            }
+            //TODO should I explicitely close data cursor ?
+
+            mBudgetBar.setProgress((float) spent);
+            mBudgetSpent.setText(Utils.formatCurrency(spent));
+            mBudgetAvailable.setText(Utils.formatCurrency(budget-spent));
+
+            //TODO use loader to update widget automatically
+            updateWidget();
+        }
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        Log.d(TAG, "onLoaderReset " + loader.getId());
+        if (loader.getId() == EXPENSES_LOADER_ID) {
+            mExpensesAdapter.swapCursor(null);
+        } else {
+            mBudgetBar.setProgress(0);
+            mBudgetSpent.setText(Utils.formatCurrency(0));
+            mBudgetAvailable.setText(Utils.formatCurrency(budget));
         }
     }
 
@@ -120,55 +175,29 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
                 }
                 @Override
                 public boolean onQueryTextChange(String query) {
-                    filterExpenses(query);
+                    mExpensesAdapter.getFilter().filter(query);
                     return true;
                 }
             }
         );
     }
 
-    private void filterExpenses(String query) {
-        mExpensesAdapter.getFilter().filter(query);
-    }
-
-    private void initListExpenses() {
-        Calendar cal = Calendar.getInstance();
-        int month = cal.get(Calendar.MONTH);
-        int year = cal.get(Calendar.YEAR);
-
-        Uri getAllExpensesUri = ExpensesContract.buildGetAllExpensesUri(mEmail, month, year);
-        Cursor cursor = getContentResolver().query(getAllExpensesUri, null, null, null, null);
-
-        if (!cursor.moveToFirst()) {
-            Log.d(TAG, "Empty DB, adding some dummy data");
-            // insert some dummy data
-            new DummyDataGen(this, mEmail).generateExpenses();
-
-            cursor = getContentResolver().query(getAllExpensesUri, null, null, null, null);
-        }
-
-//        spent = mDatasource.getTotalSpent(month, year);
-        Cursor spentCursor = getContentResolver().query(ExpensesContract.buildSpent(mEmail, month, year),
-            null, null, null, null);
-        if (spentCursor.moveToFirst()) {
-            spent = spentCursor.getDouble(0);
-        }
-        spentCursor.close();
-
+    private void setupListExpenses() {
         mBudgetBar.setMax((float) budget);
-        mBudgetBar.setProgress((float) spent);
-        mBudgetSpent.setText(Utils.formatCurrency(spent));
-        mBudgetAvailable.setText(Utils.formatCurrency(budget-spent));
+        mBudgetBar.setProgress(0);
+        mBudgetSpent.setText(Utils.formatCurrency(0));
+        mBudgetAvailable.setText(Utils.formatCurrency(budget));
 
         final String[] from = {
-            ExpensesContract.ExpensesEntry.COLUMN_DESC,
-            ExpensesContract.ExpensesEntry.COLUMN_AMOUNT
+                ExpensesContract.ExpensesEntry.COLUMN_DESC,
+                ExpensesContract.ExpensesEntry.COLUMN_AMOUNT
         };
         final int[] to = {
-            R.id.expense_description,
-            R.id.expense_amount
+                R.id.expense_description,
+                R.id.expense_amount
         };
-        mExpensesAdapter = new SimpleCursorAdapter(this, R.layout.expenselist_item, cursor, from, to, 0);
+
+        mExpensesAdapter = new SimpleCursorAdapter(this, R.layout.expenselist_item, null, from, to, 0);
         mListExpenses.setAdapter(mExpensesAdapter);
         mListExpenses.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -192,11 +221,13 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
             ExpensesContract.buildSummaryUri(mEmail, month, year), null, null, null, null);
 
         List<SummaryPoint> summary = new ArrayList<>();
-        results.moveToFirst();
-        do {
-            summary.add(SummaryPoint.of(results));
-        } while (results.moveToNext());
-        results.close();
+        if (results != null) {
+            results.moveToFirst();
+            do {
+                summary.add(SummaryPoint.of(results));
+            } while (results.moveToNext());
+            results.close();
+        }
 
         return summary;
     }
@@ -251,10 +282,11 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
     public void onOk(double amount, String description) {
         if (edited == -1) {
             Log.i(TAG, "Added new Expense(" + amount + ", " + description + ")");
-            spent += amount;
-            //TODO fix this to use mDatasource
-//            Expense expense = mDatasource.createExpense(description, amount, System.currentTimeMillis());
-//            mExpensesAdapter.add(expense);
+
+            Calendar cal = Calendar.getInstance();
+            getContentResolver().insert(ExpensesContract.ExpensesEntry.CONTENT_URI,
+                    Utils.expenseValues(mEmail, description, amount,
+                        cal.get(Calendar.MONTH), cal.get(Calendar.YEAR)));
 
             mTracker.send(new HitBuilders.EventBuilder()
                     .setCategory("Expense")
@@ -262,12 +294,12 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
                     .build());
         } else {
             Log.i(TAG, "Edited existing Expense(" + amount + ", " + description + ")");
-            //TODO update list and budget info
-//            spent += amount - edited.getAmount();
-//            edited.setAmount(amount);
-//            edited.setDescription(description);
-            mExpensesAdapter.notifyDataSetChanged();
-            edited = -1;
+
+            ContentValues values = new ContentValues();
+            values.put(ExpensesContract.ExpensesEntry.COLUMN_DESC, description);
+            values.put(ExpensesContract.ExpensesEntry.COLUMN_AMOUNT, amount);
+
+            getContentResolver().update(ExpensesContract.buildExpenseUri(edited), values, null, null);
 
             mTracker.send(new HitBuilders.EventBuilder()
                     .setCategory("Expense")
@@ -275,11 +307,7 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
                     .build());
         }
 
-        mBudgetBar.setProgress((float) spent);
-        mBudgetSpent.setText(Utils.formatCurrency(spent));
-        mBudgetAvailable.setText(Utils.formatCurrency(budget-spent));
-
-        updateWidget();
+        edited = -1;
     }
 
     @Override

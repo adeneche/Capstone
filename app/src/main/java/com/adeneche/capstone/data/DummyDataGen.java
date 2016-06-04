@@ -1,8 +1,8 @@
 package com.adeneche.capstone.data;
 
-import android.content.ContentValues;
 import android.content.Context;
 
+import com.adeneche.capstone.Utils;
 import com.adeneche.capstone.data.ExpensesContract.ExpensesEntry;
 
 import java.util.Calendar;
@@ -22,15 +22,9 @@ public class DummyDataGen {
     }
 
     private void insertExpense(String desc, double amount, int month, int year) {
-        ContentValues values = new ContentValues();
-        values.put(ExpensesEntry.COLUMN_DESC, desc);
-        values.put(ExpensesEntry.COLUMN_AMOUNT, amount);
-        values.put(ExpensesEntry.COLUMN_MONTH, month);
-        values.put(ExpensesEntry.COLUMN_YEAR, year);
-        values.put(ExpensesEntry.COLUMN_EMAIL, email);
-
         //TODO implement and use bulkInsert
-        context.getContentResolver().insert(ExpensesEntry.CONTENT_URI, values);
+        context.getContentResolver().insert(ExpensesEntry.CONTENT_URI,
+            Utils.expenseValues(email, desc, amount, month, year));
     }
 
     private void insertMonth(int month, int year, double totalExpenses) {
