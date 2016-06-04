@@ -14,6 +14,8 @@ import android.util.Log;
 import com.adeneche.capstone.data.ExpensesContract.ExpensesDbHelper;
 import com.adeneche.capstone.data.ExpensesContract.ExpensesEntry;
 
+import java.util.Arrays;
+
 public class ExpensesProvider extends ContentProvider {
     private static final String LOG_TAG = ExpensesProvider.class.getSimpleName();
 
@@ -21,10 +23,11 @@ public class ExpensesProvider extends ContentProvider {
 
     private ExpensesDbHelper mDBHelper;
 
-    static final int GET_INSERT_EXPENSE = 100;
-    static final int ALL_EXPENSES = 101;
-    static final int GET_TOTAL_SPENT = 102;
-    static final int GET_SUMMARY = 103;
+    static final int INSERT_EXPENSE = 100;
+    static final int GET_EXPENSE = 101;
+    static final int ALL_EXPENSES = 102;
+    static final int GET_TOTAL_SPENT = 103;
+    static final int GET_SUMMARY = 104;
 
     public static String[] sAllColumns = {
         ExpensesEntry._ID,
@@ -110,10 +113,11 @@ public class ExpensesProvider extends ContentProvider {
         final UriMatcher uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         final String authority = ExpensesContract.CONTENT_AUTHORITY;
 
-        uriMatcher.addURI(authority, ExpensesContract.PATH_EXPENSE, GET_INSERT_EXPENSE);
-        uriMatcher.addURI(authority, ExpensesContract.PATH_EXPENSE + "/#/#/#/all", ALL_EXPENSES);
-        uriMatcher.addURI(authority, ExpensesContract.PATH_EXPENSE + "/#/#/#/spent", GET_TOTAL_SPENT);
-        uriMatcher.addURI(authority, ExpensesContract.PATH_EXPENSE + "/#/#/#/summary", GET_SUMMARY);
+        uriMatcher.addURI(authority, ExpensesContract.PATH_EXPENSE, INSERT_EXPENSE);
+        uriMatcher.addURI(authority, ExpensesContract.PATH_EXPENSE + "/#", GET_EXPENSE);
+        uriMatcher.addURI(authority, ExpensesContract.PATH_EXPENSE + "/*/#/#/all", ALL_EXPENSES);
+        uriMatcher.addURI(authority, ExpensesContract.PATH_EXPENSE + "/*/#/#/spent", GET_TOTAL_SPENT);
+        uriMatcher.addURI(authority, ExpensesContract.PATH_EXPENSE + "/*/#/#/summary", GET_SUMMARY);
 
         return uriMatcher;
     }
@@ -132,7 +136,7 @@ public class ExpensesProvider extends ContentProvider {
 
         Cursor cursor;
         switch (sUriMatcher.match(uri)) {
-            case GET_INSERT_EXPENSE:
+            case GET_EXPENSE:
                 cursor = getExpense(uri);
                 break;
             case ALL_EXPENSES:
@@ -157,7 +161,7 @@ public class ExpensesProvider extends ContentProvider {
         final int match = sUriMatcher.match(uri);
 
         switch (match) {
-            case GET_INSERT_EXPENSE:
+            case GET_EXPENSE:
                 return ExpensesEntry.CONTENT_ITEM_TYPE;
             case ALL_EXPENSES:
                 return ExpensesEntry.CONTENT_TYPE;
@@ -178,14 +182,13 @@ public class ExpensesProvider extends ContentProvider {
         Uri returnUri;
 
         switch (match) {
-            case GET_INSERT_EXPENSE: {
+            case INSERT_EXPENSE:
                 long _id = db.insert(ExpensesEntry.TABLE_NAME, null, values);
                 if ( _id > 0 )
                     returnUri = ExpensesContract.buildExpenseUri(_id);
                 else
                     throw new SQLException("Failed to insert row into " + uri);
                 break;
-            }
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
@@ -197,12 +200,16 @@ public class ExpensesProvider extends ContentProvider {
 
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
+        Log.d(LOG_TAG, "delete("+uri+", "+selection+", "+ Arrays.toString(selectionArgs));
+
         final SQLiteDatabase db = mDBHelper.getWritableDatabase();
         final int match = sUriMatcher.match(uri);
         int rowsDeleted;
-        if (selection == null) selection = "1";
+
         switch (match) {
-            case GET_INSERT_EXPENSE:
+            case GET_EXPENSE:
+                selection = ExpensesEntry._ID + " = ?";
+                selectionArgs = new String[] { ExpensesContract.getIdFromUri(uri) };
                 rowsDeleted = db.delete(ExpensesEntry.TABLE_NAME, selection, selectionArgs);
                 break;
             default:
@@ -223,7 +230,9 @@ public class ExpensesProvider extends ContentProvider {
         int rowsUpdated;
 
         switch (match) {
-            case GET_INSERT_EXPENSE:
+            case INSERT_EXPENSE:
+                selection = ExpensesEntry._ID + " = ?";
+                selectionArgs = new String[] { ExpensesContract.getIdFromUri(uri) };
                 rowsUpdated = db.update(ExpensesEntry.TABLE_NAME, values, selection, selectionArgs);
                 break;
             default:

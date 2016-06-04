@@ -35,7 +35,7 @@ public final class ExpensesContract {
         public static final String COLUMN_EMAIL = "email";
     }
 
-    public static Uri buildExpense(String email, int month, int year) {
+    public static Uri buildGetAllExpensesUri(String email, int month, int year) {
         return buildUri(ExpensesEntry.CONTENT_URI, email, month, year, "all");
     }
 
@@ -43,7 +43,7 @@ public final class ExpensesContract {
         return buildUri(ExpensesEntry.CONTENT_URI, email, month, year, "spent");
     }
 
-    public static Uri buildSummary(String email, int month, int year) {
+    public static Uri buildSummaryUri(String email, int month, int year) {
         return buildUri(ExpensesEntry.CONTENT_URI, email, month, year, "summary");
     }
 

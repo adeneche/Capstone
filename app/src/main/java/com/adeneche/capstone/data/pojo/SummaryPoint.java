@@ -1,5 +1,6 @@
 package com.adeneche.capstone.data.pojo;
 
+import android.database.Cursor;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -9,10 +10,16 @@ import com.adeneche.capstone.Utils;
  * data point for summary graph
  */
 public class SummaryPoint implements Parcelable {
+    private final int year;
     private final int month;
     private final double expenses;
 
-    public SummaryPoint(int month, double expenses) {
+    public static SummaryPoint of(Cursor cursor) {
+        return new SummaryPoint(cursor.getInt(0), cursor.getInt(1), cursor.getDouble(2));
+    }
+
+    public SummaryPoint(int year, int month, double expenses) {
+        this.year = year;
         this.month = month;
         this.expenses = expenses;
     }
@@ -37,6 +44,7 @@ public class SummaryPoint implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(year);
         dest.writeInt(month);
         dest.writeDouble(expenses);
     }
@@ -46,10 +54,11 @@ public class SummaryPoint implements Parcelable {
 
         @Override
         public SummaryPoint createFromParcel(Parcel source) {
+            int year = source.readInt();
             int month = source.readInt();
             double expenses = source.readDouble();
 
-            return new SummaryPoint(month, expenses);
+            return new SummaryPoint(year, month, expenses);
         }
 
         @Override

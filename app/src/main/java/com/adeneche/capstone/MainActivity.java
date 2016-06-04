@@ -4,6 +4,7 @@ import android.app.FragmentManager;
 import android.appwidget.AppWidgetManager;
 import android.content.Intent;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
@@ -18,13 +19,13 @@ import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
 import com.adeneche.capstone.data.DummyDataGen;
-import com.adeneche.capstone.data.ExpenseDataSource;
 import com.adeneche.capstone.data.ExpensesContract;
 import com.adeneche.capstone.data.pojo.SummaryPoint;
 import com.akexorcist.roundcornerprogressbar.RoundCornerProgressBar;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
@@ -41,6 +42,8 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
     public static final String EXTRA_EMAIL = "email";
     public static final String ACTION_ADD_EXPENSE = "add_expense";
 
+    private String mEmail;
+
     //TODO load this from app properties
     private final double budget = 4000.0;
     private double spent;
@@ -53,7 +56,7 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
     @BindView(R.id.budget_spent) TextView mBudgetSpent;
     @BindView(R.id.budget_available) TextView mBudgetAvailable;
 
-    private ExpenseDataSource mDatasource;
+//    private ExpenseDataSource mDatasource;
 
     private SimpleCursorAdapter mExpensesAdapter;
 
@@ -73,21 +76,20 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
         mBudgetBar.setMax(5000);
 
         Intent intent = getIntent();
-        String email;
         boolean addExpense = false;
         if (ACTION_ADD_EXPENSE.equals(intent.getAction())) {
             //TODO fix this by requesting sign in at this point
-            email = "adeneche@gmail.com";
+            mEmail = "adeneche@gmail.com";
             addExpense = true;
         } else {
-            email = intent.getStringExtra(EXTRA_EMAIL);
-            Log.i(TAG, "Signed in as " + email);
+            mEmail = intent.getStringExtra(EXTRA_EMAIL);
+            Log.i(TAG, "Signed in as " + mEmail);
         }
 
-        mDatasource = new ExpenseDataSource(this, email);
-        mDatasource.open();
+//        mDatasource = new ExpenseDataSource(this, mEmail);
+//        mDatasource.open();
 
-        initListExpenses(email);
+        initListExpenses();
         initSearchView();
 
         // Obtain the shared Tracker instance.
@@ -129,22 +131,29 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
         mExpensesAdapter.getFilter().filter(query);
     }
 
-    private void initListExpenses(String email) {
+    private void initListExpenses() {
         Calendar cal = Calendar.getInstance();
         int month = cal.get(Calendar.MONTH);
         int year = cal.get(Calendar.YEAR);
 
-        Cursor cursor = mDatasource.getAllExpenses(month, year);
+        Uri getAllExpensesUri = ExpensesContract.buildGetAllExpensesUri(mEmail, month, year);
+        Cursor cursor = getContentResolver().query(getAllExpensesUri, null, null, null, null);
 
-        if (cursor.getCount() == 0) {
+        if (!cursor.moveToFirst()) {
             Log.d(TAG, "Empty DB, adding some dummy data");
             // insert some dummy data
-            new DummyDataGen(this, email).generateExpenses();
+            new DummyDataGen(this, mEmail).generateExpenses();
 
-            cursor = mDatasource.getAllExpenses(month, year);
+            cursor = getContentResolver().query(getAllExpensesUri, null, null, null, null);
         }
 
-        spent = mDatasource.getTotalSpent(month, year);
+//        spent = mDatasource.getTotalSpent(month, year);
+        Cursor spentCursor = getContentResolver().query(ExpensesContract.buildSpent(mEmail, month, year),
+            null, null, null, null);
+        if (spentCursor.moveToFirst()) {
+            spent = spentCursor.getDouble(0);
+        }
+        spentCursor.close();
 
         mBudgetBar.setMax((float) budget);
         mBudgetBar.setProgress((float) spent);
@@ -173,10 +182,29 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
         });
     }
 
+    private List<SummaryPoint> getExpensesSummary() {
+
+        final Calendar cal = Calendar.getInstance();
+        final int year = cal.get(Calendar.YEAR);
+        final int month = cal.get(Calendar.MONTH);
+
+        Cursor results = getContentResolver().query(
+            ExpensesContract.buildSummaryUri(mEmail, month, year), null, null, null, null);
+
+        List<SummaryPoint> summary = new ArrayList<>();
+        results.moveToFirst();
+        do {
+            summary.add(SummaryPoint.of(results));
+        } while (results.moveToNext());
+        results.close();
+
+        return summary;
+    }
+
     @OnClick(R.id.budget_progress)
     public void budgetBarClick() {
         FragmentManager fm = getFragmentManager();
-        List<SummaryPoint> summary = mDatasource.getExpensesSummary();
+        List<SummaryPoint> summary = getExpensesSummary();
         SummaryFragment dialog = SummaryFragment.newInstance(summary.toArray(new SummaryPoint[summary.size()]));
         dialog.show(fm, SUMMARY_DIALOG_TAG);
 
@@ -261,8 +289,8 @@ public class MainActivity extends AppCompatActivity implements ExpenseFragment.E
         }
 
         Log.i(TAG, "Deleting expense");
-        mDatasource.deleteExpense(edited);
-        //TODO fix this to use mDatasource
+        getContentResolver().delete(ExpensesContract.buildExpenseUri(edited), null, null);
+        //TODO fix this
 //        mExpensesAdapter.remove(edited);
         edited = -1;
 
