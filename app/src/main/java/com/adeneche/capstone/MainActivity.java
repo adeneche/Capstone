@@ -10,15 +10,15 @@ import android.content.Loader;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ListView;
-import android.widget.SimpleCursorAdapter;
+import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.adeneche.capstone.data.ExpensesContract;
@@ -55,16 +55,12 @@ public class MainActivity extends AppCompatActivity
     private double spent;
 
     @BindView(R.id.toolbar) Toolbar mToolbar;
-    @BindView(R.id.list) ListView mListExpenses;
+    @BindView(R.id.list) RecyclerView mListRecycler;
     @BindView(R.id.search_expense) SearchView mSearchView;
 
     @BindView(R.id.budget_progress) RoundCornerProgressBar mBudgetBar;
     @BindView(R.id.budget_spent) TextView mBudgetSpent;
     @BindView(R.id.budget_available) TextView mBudgetAvailable;
-
-//    private ExpenseDataSource mDatasource;
-
-    private SimpleCursorAdapter mExpensesAdapter;
 
     private long edited = -1;
 
@@ -95,7 +91,7 @@ public class MainActivity extends AppCompatActivity
         getLoaderManager().initLoader(EXPENSES_LOADER_ID, null, this);
         getLoaderManager().initLoader(SPENT_LOADER_ID, null, this);
 
-        setupListExpenses();
+        setupBudgetView();
         initSearchView();
 
         // Obtain the shared Tracker instance.
@@ -128,7 +124,11 @@ public class MainActivity extends AppCompatActivity
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         Log.d(TAG, "onLoadFinished " + loader.getId());
         if (loader.getId() == EXPENSES_LOADER_ID) {
-            mExpensesAdapter.swapCursor(data);
+            Adapter adapter = new Adapter(data);
+            adapter.setHasStableIds(true);
+            mListRecycler.setAdapter(adapter);
+            mListRecycler.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+
         } else {
             if (data.moveToFirst()) {
                 spent = data.getDouble(0);
@@ -148,7 +148,7 @@ public class MainActivity extends AppCompatActivity
     public void onLoaderReset(Loader<Cursor> loader) {
         Log.d(TAG, "onLoaderReset " + loader.getId());
         if (loader.getId() == EXPENSES_LOADER_ID) {
-            mExpensesAdapter.swapCursor(null);
+            mListRecycler.setAdapter(null);
         } else {
             mBudgetBar.setProgress(0);
             mBudgetSpent.setText(Utils.formatCurrency(0));
@@ -175,40 +175,18 @@ public class MainActivity extends AppCompatActivity
                 }
                 @Override
                 public boolean onQueryTextChange(String query) {
-                    mExpensesAdapter.getFilter().filter(query);
+                    //TODO implement filter using query
                     return true;
                 }
             }
         );
     }
 
-    private void setupListExpenses() {
+    private void setupBudgetView() {
         mBudgetBar.setMax((float) budget);
         mBudgetBar.setProgress(0);
         mBudgetSpent.setText(Utils.formatCurrency(0));
         mBudgetAvailable.setText(Utils.formatCurrency(budget));
-
-        final String[] from = {
-                ExpensesContract.ExpensesEntry.COLUMN_DESC,
-                ExpensesContract.ExpensesEntry.COLUMN_AMOUNT
-        };
-        final int[] to = {
-                R.id.expense_description,
-                R.id.expense_amount
-        };
-
-        mExpensesAdapter = new SimpleCursorAdapter(this, R.layout.expenselist_item, null, from, to, 0);
-        mListExpenses.setAdapter(mExpensesAdapter);
-        mListExpenses.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                final FragmentManager fm = getFragmentManager();
-                // TODO just store id and pass it to dialog
-                edited = id;
-                ExpenseFragment dialog = ExpenseFragment.newInstance(edited);
-                dialog.show(fm, EXPENSE_DIALOG_TAG);
-            }
-        });
     }
 
     private List<SummaryPoint> getExpensesSummary() {
@@ -328,12 +306,58 @@ public class MainActivity extends AppCompatActivity
                 .build());
     }
 
-    static class ExpenseHolder {
+    static class ExpenseHolder extends RecyclerView.ViewHolder {
         @BindView(R.id.expense_description) TextView description;
         @BindView(R.id.expense_amount) TextView amount;
 
         public ExpenseHolder(View view) {
+            super(view);
             ButterKnife.bind(this, view);
         }
     }
+
+
+    private class Adapter extends RecyclerView.Adapter<ExpenseHolder> {
+        private Cursor mCursor;
+
+        public Adapter(Cursor cursor) {
+            mCursor = cursor;
+        }
+
+        @Override
+        public long getItemId(int position) {
+            mCursor.moveToPosition(position);
+            return mCursor.getLong(mCursor.getColumnIndex(ExpensesContract.ExpensesEntry._ID));
+        }
+
+        @Override
+        public ExpenseHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            View view = getLayoutInflater().inflate(R.layout.expenselist_item, parent, false);
+            final ExpenseHolder eh = new ExpenseHolder(view);
+            view.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+//                    final FragmentManager fm = getFragmentManager();
+                    // TODO just store id and pass it to dialog
+//                    edited = view.getId();
+//                    ExpenseFragment dialog = ExpenseFragment.newInstance(edited);
+//                    dialog.show(fm, EXPENSE_DIALOG_TAG);
+                }
+            });
+            return eh;
+        }
+
+        @Override
+        public void onBindViewHolder(ExpenseHolder holder, int position) {
+            mCursor.moveToPosition(position);
+            holder.description.setText(mCursor.getString(mCursor.getColumnIndex(ExpensesContract.ExpensesEntry.COLUMN_DESC)));
+            holder.amount.setText(Utils.formatCurrency(mCursor.getDouble(mCursor.getColumnIndex(ExpensesContract.ExpensesEntry.COLUMN_AMOUNT))));
+        }
+
+        @Override
+        public int getItemCount() {
+            return mCursor.getCount();
+        }
+    }
+
 }
