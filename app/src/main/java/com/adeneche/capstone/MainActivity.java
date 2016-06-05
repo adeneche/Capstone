@@ -24,6 +24,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.adeneche.capstone.data.ExpensesContract;
+import com.adeneche.capstone.data.pojo.Expense;
 import com.adeneche.capstone.data.pojo.SummaryPoint;
 import com.akexorcist.roundcornerprogressbar.RoundCornerProgressBar;
 import com.google.android.gms.analytics.HitBuilders;
@@ -68,6 +69,7 @@ public class MainActivity extends AppCompatActivity
     private long edited = -1;
 
     private Tracker mTracker;
+    private Adapter mAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -129,9 +131,9 @@ public class MainActivity extends AppCompatActivity
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         Log.d(TAG, "onLoadFinished " + loader.getId());
         if (loader.getId() == EXPENSES_LOADER_ID) {
-            Adapter adapter = new Adapter(data);
-            adapter.setHasStableIds(true);
-            mListRecycler.setAdapter(adapter);
+            mAdapter = new Adapter(data);
+            mAdapter.setHasStableIds(true);
+            mListRecycler.setAdapter(mAdapter);
             mListRecycler.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
 
         } else {
@@ -155,6 +157,7 @@ public class MainActivity extends AppCompatActivity
         Log.d(TAG, "onLoaderReset " + loader.getId());
         if (loader.getId() == EXPENSES_LOADER_ID) {
             mListRecycler.setAdapter(null);
+            mAdapter = null;
         } else {
             mBudgetBar.setProgress(0);
             mBudgetSpent.setText(Utils.formatCurrency(0));
@@ -187,7 +190,9 @@ public class MainActivity extends AppCompatActivity
                 }
                 @Override
                 public boolean onQueryTextChange(String query) {
-                    //TODO implement filter using query
+                    if (mAdapter != null) {
+                        mAdapter.filter(query);
+                    }
                     return true;
                 }
             }
@@ -213,9 +218,10 @@ public class MainActivity extends AppCompatActivity
         List<SummaryPoint> summary = new ArrayList<>();
         if (results != null) {
             results.moveToFirst();
-            do {
+            while (!results.isAfterLast()) {
                 summary.add(SummaryPoint.of(results));
-            } while (results.moveToNext());
+                results.moveToNext();
+            }
             results.close();
         }
 
@@ -329,16 +335,24 @@ public class MainActivity extends AppCompatActivity
 
 
     private class Adapter extends RecyclerView.Adapter<ExpenseHolder> {
-        private Cursor mCursor;
+        private List<Expense> expenses;
+        private List<Expense> filtered;
 
         public Adapter(Cursor cursor) {
-            mCursor = cursor;
+            expenses = new ArrayList<>();
+            filtered = new ArrayList<>();
+            cursor.moveToFirst();
+            while (!cursor.isAfterLast()) {
+                Expense expense = Expense.from(cursor);
+                expenses.add(expense);
+                filtered.add(expense);
+                cursor.moveToNext();
+            }
         }
 
         @Override
         public long getItemId(int position) {
-            mCursor.moveToPosition(position);
-            return mCursor.getLong(mCursor.getColumnIndex(ExpensesContract.ExpensesEntry._ID));
+            return filtered.get(position).getId();
         }
 
         @Override
@@ -360,16 +374,28 @@ public class MainActivity extends AppCompatActivity
 
         @Override
         public void onBindViewHolder(ExpenseHolder holder, int position) {
-            mCursor.moveToPosition(position);
-            holder.description.setText(mCursor.getString(mCursor.getColumnIndex(ExpensesContract.ExpensesEntry.COLUMN_DESC)));
-            holder.amount.setText(Utils.formatCurrency(mCursor.getDouble(mCursor.getColumnIndex(ExpensesContract.ExpensesEntry.COLUMN_AMOUNT))));
+            Expense expense = filtered.get(position);
+            holder.description.setText(expense.getDescription());
+            holder.amount.setText(expense.getFormattedAmount());
 
 
         }
 
         @Override
         public int getItemCount() {
-            return mCursor.getCount();
+            return filtered.size();
+        }
+
+        public void filter(String text) {
+            String query = text.toLowerCase();
+            filtered.clear();
+            for (Expense expense : expenses) {
+                String all = expense.getDescription().toLowerCase() + " " + expense.getFormattedAmount().toLowerCase();
+                if (all.contains(query)) {
+                    filtered.add(expense);
+                }
+            }
+            notifyDataSetChanged();
         }
     }
 
