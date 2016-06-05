@@ -9,5 +9,6 @@
     android:previewImage="@drawable/preview"
     android:minResizeHeight="40dp"
     android:minResizeWidth="40dp"
+    android:configure="com.adeneche.capstone.WidgetConfigureActivity"
     >
 </appwidget-provider>

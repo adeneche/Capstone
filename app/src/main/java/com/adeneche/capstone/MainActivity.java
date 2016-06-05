@@ -169,11 +169,11 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void updateWidget() {
+        Log.d(TAG, "updating widget spent = " + mSpent);
         Intent intent = new Intent(this, ExpenseAppWidgetProvider.class);
         intent.setAction(ExpenseAppWidgetProvider.ACTION_UPDATE_TOTAL_SPENT);
-        int[] ids = { 0 };
-        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids);
-        intent.putExtra(ExpenseAppWidgetProvider.EXTRA_AMOUNT, mSpent);
+        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, new int[0]);
+        intent.putExtra(ExpenseAppWidgetProvider.EXTRA_EMAIL, mEmail);
         sendBroadcast(intent);
     }
 
