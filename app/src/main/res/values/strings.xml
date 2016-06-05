@@ -16,4 +16,8 @@
 
     <string name="widget_add_button" translatable="false">+</string>
     <string name="add_expense_description" translatable="true">add expense</string>
+    <string name="pref_budget" translatable="true">Monthly budget</string>
+    <string name="pref_budget_default" translatable="false">0</string>
+    <string name="title_activity_settings" translatable="true">Settings</string>
+    <string name="pref_budget_description" translatable="true">monthly budget</string>
 </resources>
