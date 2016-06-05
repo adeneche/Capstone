@@ -7,8 +7,10 @@ import android.content.ContentValues;
 import android.content.CursorLoader;
 import android.content.Intent;
 import android.content.Loader;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -36,7 +38,9 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 
 public class MainActivity extends AppCompatActivity
-        implements ExpenseFragment.ExpenseDialogListener, LoaderManager.LoaderCallbacks<Cursor> {
+        implements  ExpenseFragment.ExpenseDialogListener,
+                    LoaderManager.LoaderCallbacks<Cursor>,
+                    SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String TAG = "MainActivity";
 
     private static final String EXPENSE_DIALOG_TAG="EXPENSE_DIALOG";
@@ -50,8 +54,8 @@ public class MainActivity extends AppCompatActivity
 
     private String mEmail;
 
-    private final double budget = 4000.0;
-    private double spent;
+    private double mBudget;
+    private double mSpent;
 
     @BindView(R.id.toolbar) Toolbar mToolbar;
     @BindView(R.id.list) RecyclerView mListRecycler;
@@ -74,8 +78,6 @@ public class MainActivity extends AppCompatActivity
 
         setSupportActionBar(mToolbar);
 
-        mBudgetBar.setMax(5000);
-
         Intent intent = getIntent();
         boolean addExpense = false;
         if (ACTION_ADD_EXPENSE.equals(intent.getAction())) {
@@ -89,6 +91,10 @@ public class MainActivity extends AppCompatActivity
 
         getLoaderManager().initLoader(EXPENSES_LOADER_ID, null, this);
         getLoaderManager().initLoader(SPENT_LOADER_ID, null, this);
+
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        sharedPref.registerOnSharedPreferenceChangeListener(this);
+        mBudget = Double.parseDouble( sharedPref.getString(SettingsActivity.PREF_BUDGET, "4000"));
 
         setupBudgetView();
         initSearchView();
@@ -129,13 +135,16 @@ public class MainActivity extends AppCompatActivity
             mListRecycler.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
 
         } else {
+            SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+            mBudget = Double.parseDouble( sharedPref.getString(SettingsActivity.PREF_BUDGET, "4000"));
+
             if (data.moveToFirst()) {
-                spent = data.getDouble(0);
+                mSpent = data.getDouble(0);
             }
 
-            mBudgetBar.setProgress((float) spent);
-            mBudgetSpent.setText(Utils.formatCurrency(spent));
-            mBudgetAvailable.setText(Utils.formatCurrency(budget-spent));
+            mBudgetBar.setProgress((float) mSpent);
+            mBudgetSpent.setText(Utils.formatCurrency(mSpent));
+            mBudgetAvailable.setText(Utils.formatCurrency(mBudget - mSpent));
 
             updateWidget();
         }
@@ -149,8 +158,14 @@ public class MainActivity extends AppCompatActivity
         } else {
             mBudgetBar.setProgress(0);
             mBudgetSpent.setText(Utils.formatCurrency(0));
-            mBudgetAvailable.setText(Utils.formatCurrency(budget));
+            mBudgetAvailable.setText(Utils.formatCurrency(mBudget));
         }
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        Log.d(TAG, "shared preference changed");
+        getLoaderManager().restartLoader(SPENT_LOADER_ID, null, this);
     }
 
     private void updateWidget() {
@@ -158,7 +173,7 @@ public class MainActivity extends AppCompatActivity
         intent.setAction(ExpenseAppWidgetProvider.ACTION_UPDATE_TOTAL_SPENT);
         int[] ids = { 0 };
         intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids);
-        intent.putExtra(ExpenseAppWidgetProvider.EXTRA_AMOUNT, spent);
+        intent.putExtra(ExpenseAppWidgetProvider.EXTRA_AMOUNT, mSpent);
         sendBroadcast(intent);
     }
 
@@ -180,10 +195,10 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void setupBudgetView() {
-        mBudgetBar.setMax((float) budget);
+        mBudgetBar.setMax((float) mBudget);
         mBudgetBar.setProgress(0);
         mBudgetSpent.setText(Utils.formatCurrency(0));
-        mBudgetAvailable.setText(Utils.formatCurrency(budget));
+        mBudgetAvailable.setText(Utils.formatCurrency(mBudget));
     }
 
     private List<SummaryPoint> getExpensesSummary() {

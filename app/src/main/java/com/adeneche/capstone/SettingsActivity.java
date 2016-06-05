@@ -6,6 +6,8 @@ import android.preference.PreferenceFragment;
 
 public class SettingsActivity extends Activity {
 
+    public static final String PREF_BUDGET = "pref_budget";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
