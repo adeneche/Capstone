@@ -362,10 +362,12 @@ public class MainActivity extends AppCompatActivity
             view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    edited = Adapter.this.getItemId(eh.getAdapterPosition());
+                    int position = eh.getAdapterPosition();
+                    edited = Adapter.this.getItemId(position);
+                    Expense expense = filtered.get(position);
 
                     final FragmentManager fm = getFragmentManager();
-                    ExpenseFragment dialog = ExpenseFragment.newInstance(edited);
+                    ExpenseFragment dialog = ExpenseFragment.newInstance(expense);
                     dialog.show(fm, EXPENSE_DIALOG_TAG);
                 }
             });

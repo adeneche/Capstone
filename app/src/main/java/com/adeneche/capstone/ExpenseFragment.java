@@ -5,14 +5,12 @@ import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
 
-import com.adeneche.capstone.data.ExpensesContract;
 import com.adeneche.capstone.data.pojo.Expense;
 
 import butterknife.BindView;
@@ -27,9 +25,13 @@ import butterknife.ButterKnife;
  * create an instance of this fragment.
  */
 public class ExpenseFragment extends DialogFragment {
-    private static final String ARG_ID = "id";
+    private static final String ARG_DESC = "desc";
+    private static final String ARG_AMOUNT = "amount";
+    private static final String ARG_NEW = "new";
 
-    private long mId;
+    private String mDescription;
+    private double mAmount;
+    private boolean mNewExpense;
 
     @BindView(R.id.edit_expense_amount) EditText mAmountTxt;
     @BindView(R.id.edit_expense_description) EditText mDescriptionText;
@@ -46,23 +48,31 @@ public class ExpenseFragment extends DialogFragment {
      *
      * @return A new instance of fragment ExpenseFragment.
      */
-    public static ExpenseFragment newInstance(long id) {
+    private static ExpenseFragment newInstance(String description, double amount, boolean newExpense) {
         ExpenseFragment fragment = new ExpenseFragment();
         Bundle args = new Bundle();
-        args.putLong(ARG_ID, id);
+        args.putDouble(ARG_AMOUNT, amount);
+        args.putString(ARG_DESC, description);
+        args.putBoolean(ARG_NEW, newExpense);
         fragment.setArguments(args);
         return fragment;
     }
 
     public static ExpenseFragment newInstance() {
-        return newInstance(-1);
+        return newInstance("", 0, true);
+    }
+
+    public static ExpenseFragment newInstance(Expense expense) {
+        return newInstance(expense.getDescription(), expense.getAmount(), false);
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mId = getArguments().getLong(ARG_ID);
+            mDescription = getArguments().getString(ARG_DESC);
+            mAmount = getArguments().getDouble(ARG_AMOUNT);
+            mNewExpense = getArguments().getBoolean(ARG_NEW);
         }
     }
 
@@ -75,15 +85,8 @@ public class ExpenseFragment extends DialogFragment {
 
         ButterKnife.bind(this, view);
 
-        if (mId != -1) {
-            Cursor cursor = getActivity().getContentResolver()
-                    .query(ExpensesContract.buildExpenseUri(mId), null, null, null, null);
-            cursor.moveToFirst();
-            Expense expense = Expense.from(cursor);
-
-            mDescriptionText.setText(expense.getDescription());
-            mAmountTxt.setText(String.valueOf(expense.getAmount()));
-        }
+        mDescriptionText.setText(mDescription);
+        mAmountTxt.setText(String.valueOf(mAmount));
 
         if (ExpenseDialogListener.class.isInstance(getActivity())) {
             mListener = ExpenseDialogListener.class.cast(getActivity());
@@ -110,13 +113,15 @@ public class ExpenseFragment extends DialogFragment {
                 public void onClick(DialogInterface dialog, int which) {
                     ExpenseFragment.this.getDialog().cancel();
                 }
-            })
-            .setNeutralButton("Delete", new DialogInterface.OnClickListener() {
+            });
+        if (!mNewExpense) {
+            builder.setNeutralButton("Delete", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     mListener.onDelete();
                 }
             });
+        }
         return builder.create();
     }
 
