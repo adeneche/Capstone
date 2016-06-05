@@ -56,9 +56,8 @@ public class ExpenseAppWidgetProvider extends AppWidgetProvider{
             int idx = 0;
             for (int appWidgetId : filteredWidgetIds) {
                 appWidgetIds[idx++] = appWidgetId;
+                updateAppWidget(context, mgr, appWidgetId, email);
             }
-
-            onUpdate(context, mgr, appWidgetIds);
         }
 
         super.onReceive(context, intent);
