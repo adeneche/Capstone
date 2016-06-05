@@ -124,8 +124,7 @@ public class ExpensesProvider extends ContentProvider {
 
     @Override
     public boolean onCreate() {
-        //TODO get rid of email as it's only used to generate dummy data
-        mDBHelper = new ExpensesDbHelper(getContext(), "adeneche@gmail.com");
+        mDBHelper = new ExpensesDbHelper(getContext());
         return true;
     }
 

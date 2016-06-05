@@ -50,7 +50,6 @@ public class MainActivity extends AppCompatActivity
 
     private String mEmail;
 
-    //TODO load this from settings
     private final double budget = 4000.0;
     private double spent;
 
@@ -133,7 +132,6 @@ public class MainActivity extends AppCompatActivity
             if (data.moveToFirst()) {
                 spent = data.getDouble(0);
             }
-            //TODO should I explicitly close data cursor ?
 
             mBudgetBar.setProgress((float) spent);
             mBudgetSpent.setText(Utils.formatCurrency(spent));

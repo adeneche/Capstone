@@ -97,11 +97,8 @@ public final class ExpensesContract {
         public static final int DATABASE_VERSION = 1;
         public static final String DATABASE_NAME = "Expenses.db";
 
-        private final String email;
-
-        public ExpensesDbHelper(Context context, String email) {
+        public ExpensesDbHelper(Context context) {
             super(context, DATABASE_NAME, null, DATABASE_VERSION);
-            this.email = email;
         }
 
         @Override

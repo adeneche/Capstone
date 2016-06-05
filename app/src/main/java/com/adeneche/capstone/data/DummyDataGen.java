@@ -22,7 +22,6 @@ public class DummyDataGen {
     }
 
     private void insertExpense(String desc, double amount, int month, int year) {
-        //TODO implement and use bulkInsert
         context.getContentResolver().insert(ExpensesEntry.CONTENT_URI,
             Utils.expenseValues(email, desc, amount, month, year));
     }

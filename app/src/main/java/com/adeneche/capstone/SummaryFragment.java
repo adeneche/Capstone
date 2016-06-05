@@ -43,7 +43,6 @@ public class SummaryFragment extends DialogFragment {
      *
      * @return A new instance of fragment ExpenseFragment.
      */
-    // TODO: Rename and change types and number of parameters
     public static SummaryFragment newInstance(SummaryPoint[] summary) {
         SummaryFragment fragment = new SummaryFragment();
         Bundle args = new Bundle();

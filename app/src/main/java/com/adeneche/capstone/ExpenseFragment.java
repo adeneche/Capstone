@@ -99,7 +99,6 @@ public class ExpenseFragment extends DialogFragment {
             .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    //TODO handle invalid input
                     final double amount = Double.parseDouble(mAmountTxt.getText().toString());
                     final String description = mDescriptionText.getText().toString();
 
