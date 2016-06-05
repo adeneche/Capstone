@@ -1,7 +1,7 @@
 <resources>
-    <string name="app_name">Capstone</string>
-    <string name="action_settings">Settings</string>
-    <string name="search_hint">Type to search</string>
+    <string name="app_name" translatable="true">Capstone</string>
+    <string name="action_settings" translatable="true">Settings</string>
+    <string name="search_hint" translatable="true">Type to search</string>
 
 
     <string name="title_text">Easy Expenses\nSign In</string>
@@ -11,13 +11,9 @@
     <string name="loading">Loading…</string>
 
     <!-- Button labels -->
-    <string name="sign_out">Sign Out</string>
-    <string name="disconnect">Disconnect</string>
-    <string name="ok">Ok</string>
-    <string name="cancel">Cancel</string>
+    <string name="ok" translatable="true">Ok</string>
+    <string name="cancel" translatable="true">Cancel</string>
 
-    <!-- Content Description for images -->
-    <string name="desc_google_icon">Google Logo</string>
-
-    <string name="widget_add_button">+</string>
+    <string name="widget_add_button" translatable="false">+</string>
+    <string name="add_expense_description" translatable="true">add expense</string>
 </resources>
