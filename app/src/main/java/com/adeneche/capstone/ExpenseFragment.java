@@ -105,7 +105,11 @@ public class ExpenseFragment extends DialogFragment {
                     final double amount = Double.parseDouble(mAmountTxt.getText().toString());
                     final String description = mDescriptionText.getText().toString();
 
-                    mListener.onOk(amount, description);
+                    if (amount != mAmount || !description.equals(mDescription)) {
+                        mListener.onOk(amount, description);
+                    } else {
+                        ExpenseFragment.this.getDialog().cancel();
+                    }
                 }
             })
             .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
