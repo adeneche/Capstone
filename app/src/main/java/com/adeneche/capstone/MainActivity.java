@@ -23,6 +23,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.adeneche.capstone.data.DummyDataGen;
 import com.adeneche.capstone.data.ExpensesContract;
 import com.adeneche.capstone.data.pojo.Expense;
 import com.adeneche.capstone.data.pojo.SummaryPoint;
@@ -135,6 +136,11 @@ public class MainActivity extends AppCompatActivity
             mAdapter.setHasStableIds(true);
             mListRecycler.setAdapter(mAdapter);
             mListRecycler.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+
+            if (mAdapter.getItemCount() == 0) {
+                Log.d(TAG, "Generating dummy data");
+                new DummyDataGen(this, mEmail).generateExpenses();
+            }
 
         } else {
             SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);

@@ -27,7 +27,7 @@ public class DummyDataGen {
     }
 
     private void insertMonth(int month, int year, double totalExpenses) {
-        int num = 20;
+        int num = 10;
         double expense = totalExpenses/num;
 
         for (int i = 0; i < num; i++) {
