@@ -1,33 +1,33 @@
 {
   "project_info": {
-    "project_number": "353359988507",
-    "project_id": "expenses-1326"
+    "project_number": "636604189656",
+    "project_id": "capstone-1334"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:353359988507:android:fd7a67309d6c3de0",
+        "mobilesdk_app_id": "1:636604189656:android:fd7a67309d6c3de0",
         "android_client_info": {
           "package_name": "com.adeneche.capstone"
         }
       },
       "oauth_client": [
         {
-          "client_id": "353359988507-h7uibq9bqqilrhhs0a6aeh0vm2jsb9aj.apps.googleusercontent.com",
+          "client_id": "636604189656-ngq73eo3e04d1vcrlujoht4ubfe8au8d.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.adeneche.capstone",
-            "certificate_hash": "0A9C9FEC9045D5E3FB671C0E86693E21C6495FFE"
+            "certificate_hash": "DBD658F0F2D57FB407823B8C5D3034F25CAA4369"
           }
         },
         {
-          "client_id": "353359988507-90375tgoe14tfenb1b7rkimquuttpug8.apps.googleusercontent.com",
+          "client_id": "636604189656-3nad7iert6k354eutd3shi4g8noapnj5.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyAZ1dDbObs2E9qKUpgwkth3EqjZSJQvxKE"
+          "current_key": "AIzaSyDDmPOMtsQsKEkyqVA2IjjjWGUCNTz00Ec"
         }
       ],
       "services": {

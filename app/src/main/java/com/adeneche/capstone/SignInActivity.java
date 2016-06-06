@@ -90,6 +90,7 @@ public class SignInActivity extends AppCompatActivity implements
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        Log.d(TAG, "onActivityResult("+resultCode+")");
         // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
         if (requestCode == RC_SIGN_IN) {
             GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
@@ -108,6 +109,8 @@ public class SignInActivity extends AppCompatActivity implements
             Intent intent = new Intent(this, MainActivity.class);
             intent.putExtra(MainActivity.EXTRA_EMAIL, acct.getEmail());
             startActivity(intent);
+        } else {
+
         }
     }
     // [END handleSignInResult]
